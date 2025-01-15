@@ -4,9 +4,7 @@ import { punishmentPools, rewardPools, personRewardPoolMap } from '@/config/pool
 // 抽奖阶段枚举
 export const DRAW_STAGES = {
   PERSON: 'PERSON',
-  PUNISHMENT_POOLS: 'PUNISHMENT_POOLS',
-  PUNISHMENT: 'PUNISHMENT',
-  REWARD: 'REWARD',
+  GIFT: 'GIFT',      // 改为礼包抽取阶段
   COMPLETED: 'COMPLETED'
 }
 
@@ -21,49 +19,31 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
     // 当前抽中的人
     currentPerson: null,
     
-    // 惩罚相关状态
-    selectedPunishmentPools: [], // 被选中的惩罚池
-    currentPunishmentPool: null, // 当前正在抽取的惩罚池
-    punishmentResults: [],       // 抽中的惩罚结果
-    
-    // 奖励相关状态
-    currentRewardPool: null,     // 当前可用的奖励池
-    rewardResult: null,          // 抽中的奖励结果
+    // 礼包相关状态（内部仍然区分惩罚和奖励）
+    selectedPunishmentPools: [], 
+    punishmentResults: [],
+    currentRewardPool: null,
+    rewardResult: null,
     
     // 历史记录
     winners: []
   }),
 
   getters: {
-    // 现有的 getters
-    availablePrizes: (state) => {
-      if (!state.currentRewardPool) return []
-      return state.currentRewardPool.items.filter(item => 
-        !state.winners.some(w => w.prize.id === item.id)
-      )
-    },
-    
-    // 新增 getters
     currentStageText: (state) => {
       const stageMap = {
         [DRAW_STAGES.PERSON]: '抽取幸运观众',
-        [DRAW_STAGES.PUNISHMENT_POOLS]: '抽取惩罚池',
-        [DRAW_STAGES.PUNISHMENT]: '抽取惩罚',
-        [DRAW_STAGES.REWARD]: '抽取奖励',
+        [DRAW_STAGES.GIFT]: '抽取幸运礼包',
         [DRAW_STAGES.COMPLETED]: '抽奖完成'
       }
       return stageMap[state.currentStage]
     },
     
-    canProceedToNextStage: (state) => {
-      switch (state.currentStage) {
-        case DRAW_STAGES.PUNISHMENT:
-          return state.punishmentResults.length === state.selectedPunishmentPools.length
-        case DRAW_STAGES.REWARD:
-          return !!state.rewardResult
-        default:
-          return true
-      }
+    availablePrizes: (state) => {
+      if (!state.currentRewardPool) return []
+      return state.currentRewardPool.items.filter(item => 
+        !state.winners.some(w => w.prize.id === item.id)
+      )
     }
   },
 
@@ -89,7 +69,7 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       this.isDrawing = false
     },
 
-    // 设置当前抽中的人
+    // 修改抽取流程
     setCurrentPerson(person) {
       this.currentPerson = person
       this.availableParticipants = this.availableParticipants.filter(p => p.id !== person.id)
@@ -98,11 +78,14 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       const poolId = personRewardPoolMap[person.name]
       this.currentRewardPool = rewardPools.find(pool => pool.id === poolId)
       
-      // 进入下一阶段
-      this.currentStage = DRAW_STAGES.PUNISHMENT_POOLS
+      // 在后台自动抽取惩罚池
+      this.drawPunishmentPools()
+      
+      // 进入礼包抽取阶段
+      this.currentStage = DRAW_STAGES.GIFT
     },
 
-    // 抽取惩罚池数量
+    // 在后台自动抽取惩罚池
     drawPunishmentPools() {
       const count = Math.floor(Math.random() * 4) // 0-3个
       const availablePools = [...punishmentPools]
@@ -112,39 +95,36 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
         const randomIndex = Math.floor(Math.random() * availablePools.length)
         this.selectedPunishmentPools.push(availablePools.splice(randomIndex, 1)[0])
       }
-      
-      this.currentStage = count > 0 ? DRAW_STAGES.PUNISHMENT : DRAW_STAGES.REWARD
     },
 
-    // 添加惩罚结果
-    addPunishmentResult(punishment) {
-      this.punishmentResults.push(punishment)
-      
-      // 检查是否所有惩罚池都抽取完成
-      if (this.punishmentResults.length === this.selectedPunishmentPools.length) {
-        this.currentStage = DRAW_STAGES.REWARD
+    // 抽取礼包（包含惩罚和奖励）
+    async drawGift() {
+      // 在后台处理惩罚抽取
+      for (const pool of this.selectedPunishmentPools) {
+        const punishment = pool.items[Math.floor(Math.random() * pool.items.length)]
+        this.punishmentResults.push(punishment)
       }
-    },
-
-    // 添加奖励结果
-    addRewardResult(reward) {
+      
+      // 抽取奖励
+      const rewards = this.availablePrizes
+      const reward = rewards[Math.floor(Math.random() * rewards.length)]
       this.rewardResult = reward
-      this.currentStage = DRAW_STAGES.COMPLETED
       
       // 添加到获奖记录
       this.winners.push({
         winner: this.currentPerson,
         prize: reward,
-        punishments: this.punishmentResults,
+        tasks: this.punishmentResults,  // 改名为 tasks
         timestamp: new Date().getTime()
       })
+      
+      this.currentStage = DRAW_STAGES.COMPLETED
     },
 
     // 重置当前抽奖
     resetCurrent() {
       this.currentPerson = null
       this.selectedPunishmentPools = []
-      this.currentPunishmentPool = null
       this.punishmentResults = []
       this.currentRewardPool = null
       this.rewardResult = null

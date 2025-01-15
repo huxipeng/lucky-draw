@@ -38,51 +38,14 @@
               </div>
             </div>
 
-            <!-- 抽取惩罚池阶段 -->
-            <div v-if="currentStage === DRAW_STAGES.PUNISHMENT_POOLS" class="draw-section">
-              <div class="selected-person">
-                恭喜 {{ store.currentPerson?.name }}
-              </div>
-              <div class="pools-grid">
-                <div
-                  v-for="pool in punishmentPools"
-                  :key="pool.id"
-                  class="pool-item"
-                  :class="{ 
-                    'selected': isPoolSelected(pool.id),
-                    'rolling': isDrawing 
-                  }"
-                >
-                  {{ pool.name }}
+            <!-- 礼包抽取阶段 -->
+            <div v-if="currentStage === DRAW_STAGES.GIFT" class="draw-section">
+              <div class="gift-info">
+                <div class="winner-name">
+                  恭喜 {{ store.currentPerson?.name }}
                 </div>
-              </div>
-            </div>
-
-            <!-- 抽取惩罚阶段 -->
-            <div v-if="currentStage === DRAW_STAGES.PUNISHMENT" class="draw-section">
-              <div class="punishment-info">
-                <div class="current-pool">
-                  当前惩罚池：{{ currentPunishmentPool?.name }}
-                </div>
-                <div class="rolling-punishment" v-if="isDrawing">
-                  {{ currentRollingPunishment }}
-                </div>
-              </div>
-              <div class="results-list">
-                <div v-for="(result, index) in store.punishmentResults" :key="index" class="result-item">
-                  {{ result.name }}
-                </div>
-              </div>
-            </div>
-
-            <!-- 抽取奖励阶段 -->
-            <div v-if="currentStage === DRAW_STAGES.REWARD" class="draw-section">
-              <div class="reward-info">
-                <div class="pool-name">
-                  奖励池：{{ store.currentRewardPool?.name }}
-                </div>
-                <div class="rolling-reward" v-if="isDrawing">
-                  {{ currentRollingReward }}
+                <div class="rolling-gift" v-if="isDrawing">
+                  {{ currentRollingGift }}
                 </div>
               </div>
             </div>
@@ -93,15 +56,19 @@
                 <div class="winner-name">
                   {{ store.currentPerson?.name }}
                 </div>
-                <div class="punishments-list" v-if="store.punishmentResults.length">
-                  <div class="list-title">获得惩罚：</div>
-                  <div v-for="(punishment, index) in store.punishmentResults" :key="index" class="punishment-item">
-                    {{ punishment.name }}
+                <div class="gift-content">
+                  <template v-if="store.punishmentResults.length">
+                    <div class="list-title">幸运任务：</div>
+                    <div class="tasks-grid">
+                      <div v-for="(task, index) in store.punishmentResults" :key="index" class="task-item">
+                        {{ task.name }}
+                      </div>
+                    </div>
+                  </template>
+                  <div class="reward-result">
+                    <div class="list-title">幸运奖品：</div>
+                    <div class="reward-item">{{ store.rewardResult?.name }}</div>
                   </div>
-                </div>
-                <div class="reward-result">
-                  <div class="list-title">获得奖励：</div>
-                  <div class="reward-item">{{ store.rewardResult?.name }}</div>
                 </div>
               </div>
             </div>
@@ -126,41 +93,22 @@
                   :loading="isDrawing"
                   size="large"
                 >
-                  {{ isDrawing ? '停止' : '开始抽人' }}
+                  {{ isDrawing ? '停止' : '开始抽取' }}
                 </a-button>
               </template>
-              <template v-else-if="currentStage === DRAW_STAGES.PUNISHMENT_POOLS">
+              <template v-else-if="currentStage === DRAW_STAGES.GIFT">
                 <a-button
                   type="primary"
-                  @click="handleDrawPunishmentPools"
-                  size="large"
-                >
-                  抽取惩罚池
-                </a-button>
-              </template>
-              <template v-else-if="currentStage === DRAW_STAGES.PUNISHMENT">
-                <a-button
-                  type="primary"
-                  @click="handleDrawPunishment"
+                  @click="handleDrawGift"
                   :loading="isDrawing"
                   size="large"
                 >
-                  {{ isDrawing ? '停止' : '抽取惩罚' }}
-                </a-button>
-              </template>
-              <template v-else-if="currentStage === DRAW_STAGES.REWARD">
-                <a-button
-                  type="primary"
-                  @click="handleDrawReward"
-                  :loading="isDrawing"
-                  size="large"
-                >
-                  {{ isDrawing ? '停止' : '抽取奖励' }}
+                  {{ isDrawing ? '停止' : '抽取礼包' }}
                 </a-button>
               </template>
               <a-button 
                 @click="handleReset" 
-                :disabled="isDrawing || currentStage === DRAW_STAGES.IDLE"
+                :disabled="isDrawing"
                 size="large"
               >
                 重置
@@ -197,6 +145,7 @@ const currentStage = computed(() => store.currentStage)
 
 // 状态
 const currentRollingName = ref('')
+const currentRollingGift = ref('')
 const currentRollingPunishment = ref('')
 const currentRollingReward = ref('')
 let rollingTimer = null
@@ -249,9 +198,7 @@ const isStageCompleted = (stage) => {
 const getStageText = (stage) => {
   const stageMap = {
     [DRAW_STAGES.PERSON]: '抽取人员',
-    [DRAW_STAGES.PUNISHMENT_POOLS]: '抽取惩罚池',
-    [DRAW_STAGES.PUNISHMENT]: '抽取惩罚',
-    [DRAW_STAGES.REWARD]: '抽取奖励',
+    [DRAW_STAGES.GIFT]: '抽取礼包',
     [DRAW_STAGES.COMPLETED]: '完成'
   }
   return stageMap[stage]
@@ -268,8 +215,7 @@ const handleDrawPerson = () => {
     store.stopDraw()
     stopRolling()
     // 选择人员
-    const participants = store.availableParticipants
-    const person = participants[Math.floor(Math.random() * participants.length)]
+    const person = store.availableParticipants[Math.floor(Math.random() * store.availableParticipants.length)]
     store.setCurrentPerson(person)
     currentRollingName.value = ''
     message.success(`已抽中: ${person.name}`)
@@ -324,8 +270,7 @@ const handleDrawReward = () => {
 const handleReset = () => {
   store.resetCurrent()
   currentRollingName.value = ''
-  currentRollingPunishment.value = ''
-  currentRollingReward.value = ''
+  currentRollingGift.value = ''
   message.success('已重置当前抽奖')
 }
 
@@ -433,6 +378,43 @@ const stopDraw = () => {
   isDrawing.value = false
   highlightName.value = ''
   // 其他停止逻辑...
+}
+
+const handleDrawGift = () => {
+  if (!isDrawing.value) {
+    store.startDraw()
+    startRollingGift()
+  } else {
+    store.stopDraw()
+    stopRolling()
+    store.drawGift()
+    message.success('礼包抽取完成！')
+  }
+}
+
+const startRollingGift = () => {
+  const gifts = [
+    '神秘大礼包', '幸运礼盒', '惊喜好礼', '特别奖励',
+    '幸运星礼物', '节日祝福', '欢乐礼包', '幸运礼遇'
+  ]
+  
+  let lastIndex = -1
+  rollingTimer = setInterval(() => {
+    let randomIndex
+    do {
+      randomIndex = Math.floor(Math.random() * gifts.length)
+    } while (randomIndex === lastIndex && gifts.length > 1)
+    
+    lastIndex = randomIndex
+    currentRollingGift.value = gifts[randomIndex]
+  }, 100)
+
+  const randomDuration = 3000 + Math.random() * 2000
+  autoStopTimer = setTimeout(() => {
+    if (isDrawing.value) {
+      handleDrawGift()
+    }
+  }, randomDuration)
 }
 
 // 组件挂载时导入参与者名单
@@ -933,5 +915,41 @@ onUnmounted(() => {
 
 .action-buttons :deep(.ant-btn) {
   min-width: 160px;
+}
+
+.gift-info {
+  text-align: center;
+  padding: 40px;
+}
+
+.rolling-gift {
+  font-size: 48px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textGlow 2s ease-in-out infinite;
+  margin-top: 30px;
+}
+
+.tasks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.task-item {
+  background: rgba(255, 77, 79, 0.05);
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 20px;
+  color: #ff4d4f;
+  transition: all 0.3s ease;
+}
+
+.task-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.1);
 }
 </style> 
