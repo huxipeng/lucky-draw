@@ -44,27 +44,19 @@
                 <div class="winner-name">
                   恭喜 {{ store.currentPerson?.name }}
                 </div>
-                <!-- 任务抽取阶段 -->
-                <template v-if="store.currentGiftStage === GIFT_STAGES.TASK">
-                  <div class="stage-progress">第一步：抽取幸运任务</div>
-                  <div class="rolling-gift" v-if="isDrawing">
-                    {{ currentRollingTask }}
-                  </div>
-                  <div v-else-if="store.punishmentResults.length" class="tasks-preview">
+                <div class="rolling-gift" v-if="isDrawing">
+                  {{ currentRollingGift }}
+                </div>
+                <div v-else-if="showHiddenGift" class="hidden-gift-reveal">
+                  <div class="reveal-title">🎉 恭喜抽中隐藏礼包！</div>
+                  <div class="tasks-preview">
                     <div class="tasks-grid">
                       <div v-for="(task, index) in store.punishmentResults" :key="index" class="task-item">
                         {{ task.name }}
                       </div>
                     </div>
                   </div>
-                </template>
-                <!-- 奖品抽取阶段 -->
-                <template v-else>
-                  <div class="stage-progress">第二步：抽取幸运奖品</div>
-                  <div class="rolling-gift" v-if="isDrawing">
-                    {{ currentRollingPrize }}
-                  </div>
-                </template>
+                </div>
               </div>
             </div>
 
@@ -121,7 +113,7 @@
                   :loading="isDrawing"
                   size="large"
                 >
-                  {{ isDrawing ? '停止' : store.currentGiftStage === GIFT_STAGES.TASK ? '抽取任务' : '抽取奖品' }}
+                  {{ isDrawing ? '停止' : '抽取礼包' }}
                 </a-button>
               </template>
               <a-button 
@@ -153,7 +145,7 @@
 
 <script setup>
 import { ref, computed, onUnmounted, onMounted } from 'vue'
-import { useLuckyDrawStore, DRAW_STAGES, GIFT_STAGES } from '@/stores/luckyDraw'
+import { useLuckyDrawStore, DRAW_STAGES } from '@/stores/luckyDraw'
 import { message } from 'ant-design-vue'
 import { participants } from '@/config/participants'
 import { punishmentPools } from '@/config/pools'
@@ -172,6 +164,7 @@ let rollingTimer = null
 let autoStopTimer = null
 const highlightName = ref('')
 let highlightTimer = null
+const showHiddenGift = ref(false)
 
 // 计算属性
 const canDrawPerson = computed(() => store.availableParticipants.length > 0)
@@ -290,8 +283,8 @@ const handleDrawReward = () => {
 const handleReset = () => {
   store.resetCurrent()
   currentRollingName.value = ''
-  currentRollingTask.value = ''
-  currentRollingPrize.value = ''
+  currentRollingGift.value = ''
+  showHiddenGift.value = false
   message.success('已重置当前抽奖')
 }
 
@@ -404,57 +397,31 @@ const stopDraw = () => {
 const handleDrawGift = () => {
   if (!isDrawing.value) {
     store.startDraw()
-    if (store.currentGiftStage === GIFT_STAGES.TASK) {
-      startRollingTask()
-    } else {
-      startRollingPrize()
-    }
+    startRollingGift()
   } else {
     store.stopDraw()
     stopRolling()
     store.drawGift()
-    if (store.currentGiftStage === GIFT_STAGES.TASK) {
-      message.success('任务抽取完成！')
-      // 清空滚动显示
-      currentRollingTask.value = ''
-      // 短暂延迟后切换到奖品抽取阶段
+    currentRollingGift.value = ''
+    
+    if (store.hasHiddenGift) {
+      message.success('恭喜抽中隐藏礼包！')
+      showHiddenGift.value = true
+      // 3秒后自动完成
       setTimeout(() => {
-        store.currentGiftStage = GIFT_STAGES.PRIZE
-      }, 1000)
+        message.success('礼包抽取完成！')
+        showHiddenGift.value = false
+        store.currentStage = DRAW_STAGES.COMPLETED
+      }, 3000)
     } else {
       message.success('礼包抽取完成！')
-      currentRollingPrize.value = ''
+      store.currentStage = DRAW_STAGES.COMPLETED
     }
   }
 }
 
-const startRollingTask = () => {
-  const tasks = [
-    '神秘任务', '趣味挑战', '欢乐时刻', '幸运使命',
-    '快乐挑战', '欢乐任务', '幸运考验', '开心时刻'
-  ]
-  
-  let lastIndex = -1
-  rollingTimer = setInterval(() => {
-    let randomIndex
-    do {
-      randomIndex = Math.floor(Math.random() * tasks.length)
-    } while (randomIndex === lastIndex && tasks.length > 1)
-    
-    lastIndex = randomIndex
-    currentRollingTask.value = tasks[randomIndex]
-  }, 100)
-
-  const randomDuration = 3000 + Math.random() * 2000
-  autoStopTimer = setTimeout(() => {
-    if (isDrawing.value) {
-      handleDrawGift()
-    }
-  }, randomDuration)
-}
-
-const startRollingPrize = () => {
-  const prizes = [
+const startRollingGift = () => {
+  const gifts = [
     '神秘大奖', '幸运好礼', '惊喜礼品', '特别奖励',
     '幸运之星', '节日祝福', '欢乐礼遇', '幸运礼物'
   ]
@@ -463,11 +430,11 @@ const startRollingPrize = () => {
   rollingTimer = setInterval(() => {
     let randomIndex
     do {
-      randomIndex = Math.floor(Math.random() * prizes.length)
-    } while (randomIndex === lastIndex && prizes.length > 1)
+      randomIndex = Math.floor(Math.random() * gifts.length)
+    } while (randomIndex === lastIndex && gifts.length > 1)
     
     lastIndex = randomIndex
-    currentRollingPrize.value = prizes[randomIndex]
+    currentRollingGift.value = gifts[randomIndex]
   }, 100)
 
   const randomDuration = 3000 + Math.random() * 2000
@@ -1041,5 +1008,77 @@ onUnmounted(() => {
   animation: textGlow 2s ease-in-out infinite;
   margin-top: 30px;
   min-height: 72px;
+}
+
+.hidden-gift-reveal {
+  margin-top: 30px;
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.reveal-title {
+  font-size: 32px;
+  font-weight: bold;
+  color: #ff4d4f;
+  margin-bottom: 20px;
+  text-shadow: 0 2px 4px rgba(255, 77, 79, 0.2);
+  animation: pulse 2s infinite;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.tasks-preview {
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.1);
+}
+
+.tasks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.task-item {
+  background: rgba(255, 77, 79, 0.05);
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 20px;
+  color: #ff4d4f;
+  transition: all 0.3s ease;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.task-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 </style> 
