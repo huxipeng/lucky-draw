@@ -5,20 +5,22 @@
       <a-col :span="16">
         <a-card title="抽奖区域" class="draw-area">
           <div class="rolling-box" ref="rollingBox">
-            <template v-if="!store.currentPerson">
-              <div class="rolling-item" v-if="currentRollingName">
-                {{ currentRollingName }}
-              </div>
-              <div v-else class="hint-text">
-                点击开始按钮抽取幸运观众
-              </div>
-            </template>
-            <template v-else>
-              <div class="selected-person">
-                {{ store.currentPerson.name }}
-              </div>
-              <div class="rolling-prize" v-if="currentRollingPrize">
+            <div class="selected-info" v-if="store.currentPerson">
+              <div class="selected-person">{{ store.currentPerson.name }}</div>
+              <div class="selected-prize" v-if="currentRollingPrize">
                 {{ currentRollingPrize }}
+              </div>
+            </div>
+            <template v-if="!store.currentPerson">
+              <div class="candidates-grid">
+                <div
+                  v-for="participant in store.availableParticipants"
+                  :key="participant.id"
+                  class="candidate-item"
+                  :class="{ active: participant.name === currentRollingName }"
+                >
+                  {{ participant.name }}
+                </div>
               </div>
             </template>
           </div>
@@ -125,31 +127,49 @@ const columns = [
 
 // 方法
 const startRollingName = () => {
+  let lastIndex = -1;
   rollingTimer = setInterval(() => {
-    const participants = store.availableParticipants
-    const randomIndex = Math.floor(Math.random() * participants.length)
-    currentRollingName.value = participants[randomIndex].name
-  }, 50)
+    const participants = store.availableParticipants;
+    let randomIndex;
+    // 确保不会连续选中同一个人
+    do {
+      randomIndex = Math.floor(Math.random() * participants.length);
+    } while (randomIndex === lastIndex && participants.length > 1);
+    
+    lastIndex = randomIndex;
+    currentRollingName.value = participants[randomIndex].name;
+  }, 100); // 稍微降低速度，让动画更清晰
 
+  // 随机 3-5 秒后停止
+  const randomDuration = 3000 + Math.random() * 2000;
   autoStopTimer = setTimeout(() => {
     if (isDrawing.value) {
-      toggleDrawPerson()
+      toggleDrawPerson();
     }
-  }, 5000)
+  }, randomDuration);
 }
 
 const startRollingPrize = () => {
+  let lastIndex = -1;
   rollingTimer = setInterval(() => {
-    const prizes = store.availablePrizes
-    const randomIndex = Math.floor(Math.random() * prizes.length)
-    currentRollingPrize.value = prizes[randomIndex].name
-  }, 50)
+    const prizes = store.availablePrizes;
+    let randomIndex;
+    // 确保不会连续选中同一个奖项
+    do {
+      randomIndex = Math.floor(Math.random() * prizes.length);
+    } while (randomIndex === lastIndex && prizes.length > 1);
+    
+    lastIndex = randomIndex;
+    currentRollingPrize.value = prizes[randomIndex].name;
+  }, 100);
 
+  // 随机 3-5 秒后停止
+  const randomDuration = 3000 + Math.random() * 2000;
   autoStopTimer = setTimeout(() => {
     if (isDrawing.value) {
-      toggleDrawPrize()
+      toggleDrawPrize();
     }
-  }, 5000)
+  }, randomDuration);
 }
 
 const stopRolling = () => {
@@ -238,43 +258,64 @@ onUnmounted(() => {
 .rolling-box {
   flex: 1;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
+  gap: 24px;
   margin-bottom: 24px;
   background: linear-gradient(135deg, #fff5f5 0%, #fff1f0 100%);
   border-radius: 16px;
-  gap: 24px;
-  min-height: 300px;
-  box-shadow: 0 10px 30px rgba(255, 77, 79, 0.1);
+  min-height: 400px;
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(255, 77, 79, 0.1);
+  padding: 20px;
 }
 
-.rolling-box::before {
+.candidates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 10px;
+  padding: 16px;
+  width: 100%;
+  max-height: 380px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.candidate-item {
+  padding: 8px 6px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 6px;
+  font-size: 15px;
+  color: #666;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 77, 79, 0.1);
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.candidate-item.active {
+  color: #fff;
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.2);
+  z-index: 1;
+  font-weight: bold;
+}
+
+.candidate-item.active::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 20%, rgba(255, 77, 79, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(255, 77, 79, 0.08) 0%, transparent 50%);
-  animation: glowPulse 3s ease-in-out infinite;
-}
-
-.rolling-box::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 0L60 40H40L50 0zM50 100L40 60H60L50 100zM100 50L60 60V40L100 50zM0 50L40 40V60L0 50z' fill='%23FF4D4F' fill-opacity='0.03'/%3E%3C/svg%3E");
-  opacity: 0.5;
-  animation: rotateBg 30s linear infinite;
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
+  animation: glowPulse 1s ease-in-out infinite;
 }
 
 @keyframes glowPulse {
@@ -282,38 +323,42 @@ onUnmounted(() => {
   50% { opacity: 0.8; }
 }
 
-@keyframes rotateBg {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.selected-info {
+  flex: 0 0 200px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(255, 77, 79, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 77, 79, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 200px;
+  animation: slideIn 0.5s ease-out;
 }
 
-.rolling-item, .selected-person {
-  font-size: 64px;
+.selected-person {
+  font-size: 36px;
   font-weight: bold;
-  background: linear-gradient(45deg, #ff4d4f, #ff7875);
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 12px;
+  text-shadow: 0 2px 4px rgba(255, 77, 79, 0.1);
+}
+
+.selected-prize {
+  font-size: 28px;
+  background: linear-gradient(135deg, #ff7875 0%, #ffa39e 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 2px 4px rgba(255, 77, 79, 0.1);
-  animation: textGlow 2s ease-in-out infinite;
-  z-index: 1;
-  letter-spacing: 4px;
 }
 
-.rolling-prize {
-  font-size: 48px;
-  font-weight: bold;
-  background: linear-gradient(45deg, #ff7875, #ffa39e);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 2px 4px rgba(255, 77, 79, 0.1);
-  animation: prizeGlow 2s ease-in-out infinite;
-  z-index: 1;
-  letter-spacing: 2px;
-}
-
-@keyframes textGlow {
-  0%, 100% { opacity: 0.9; }
-  50% { opacity: 1; }
+:deep(.ant-card-body) {
+  overflow: visible;
 }
 
 .hint-text {
@@ -440,5 +485,24 @@ onUnmounted(() => {
   font-size: 20px;
   letter-spacing: 2px;
   font-weight: 600;
+}
+
+/* 添加滚动条样式 */
+.candidates-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.candidates-grid::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.candidates-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 77, 79, 0.3);
+  border-radius: 3px;
+}
+
+.candidates-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 77, 79, 0.5);
 }
 </style> 
