@@ -10,21 +10,6 @@
             </div>
           </template>
 
-          <!-- 抽奖阶段指示器 -->
-          <div class="stage-indicator">
-            <div 
-              v-for="(stage, key) in DRAW_STAGES" 
-              :key="key"
-              class="stage-item"
-              :class="{
-                'active': currentStage === stage,
-                'completed': isStageCompleted(stage)
-              }"
-            >
-              {{ getStageText(stage) }}
-            </div>
-          </div>
-
           <!-- 抽奖主区域 -->
           <div class="draw-main">
             <!-- 抽人阶段 -->
@@ -54,31 +39,24 @@
                   {{ currentRollingGift }}
                 </div>
                 <template v-else>
+                  <!-- 显示最终结果 -->
+                  <div v-if="store.isCompleted" class="result-summary">
+                    <div class="gift-content">
+                      <div class="reveal-title">🎉 抽中年会奖品是：</div>
+                      <div class="reward-result">
+                        <div class="reward-item">{{ store.rewardResult?.name }}</div>
+                      </div>
+                    </div>
+                  </div>
                   <!-- 显示隐藏礼包 -->
                   <div v-if="showHiddenGift" class="hidden-gift-reveal">
-                    <div class="reveal-title">🎉 恭喜抽中隐藏礼包！</div>
+                    <div class="reveal-title" v-if="!store.isCompleted">🎉 恭喜抽中隐藏礼包！</div>
                     <div class="tasks-preview">
+                      <div class="list-title">隐藏礼包</div>
                       <div class="tasks-grid">
                         <div v-for="(task, index) in store.punishmentResults" :key="index" class="task-item">
                           {{ task.name }}
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- 显示最终结果 -->
-                  <div v-if="store.isCompleted" class="result-summary">
-                    <div class="gift-content">
-                      <template v-if="store.punishmentResults.length">
-                        <div class="list-title">幸运任务：</div>
-                        <div class="tasks-grid">
-                          <div v-for="(task, index) in store.punishmentResults" :key="index" class="task-item">
-                            {{ task.name }}
-                          </div>
-                        </div>
-                      </template>
-                      <div class="reward-result">
-                        <div class="list-title">幸运奖品：</div>
-                        <div class="reward-item">{{ store.rewardResult?.name }}</div>
                       </div>
                     </div>
                   </div>
@@ -125,7 +103,7 @@
                 <a-button
                   type="primary"
                   :disabled="!canDrawPerson"
-                  @click="handleDrawPerson"
+                  @click="isDrawing ? handleDrawPerson() : handleDrawPerson()"
                   :loading="isDrawing"
                   size="large"
                 >
@@ -135,20 +113,13 @@
               <template v-else-if="currentStage === DRAW_STAGES.GIFT">
                 <a-button
                   type="primary"
-                  @click="handleDrawGift"
+                  @click="store.isCompleted ? handleReset() : handleDrawGift()"
                   :loading="isDrawing"
                   size="large"
                 >
                   {{ store.drawButtonText }}
                 </a-button>
               </template>
-              <a-button 
-                @click="handleReset" 
-                :disabled="isDrawing"
-                size="large"
-              >
-                重置
-              </a-button>
             </div>
           </div>
         </a-card>
@@ -205,13 +176,6 @@ const columns = [
     align: 'center'
   },
   {
-    title: '惩罚',
-    dataIndex: 'punishments',
-    key: 'punishments',
-    align: 'center',
-    customRender: ({ text }) => text.map(p => p.name).join('、') || '无'
-  },
-  {
     title: '奖励',
     dataIndex: ['prize', 'name'],
     key: 'prize',
@@ -225,23 +189,6 @@ const columns = [
     customRender: ({ text }) => new Date(text).toLocaleString()
   }
 ]
-
-// 阶段判断方法
-const isStageCompleted = (stage) => {
-  const stageOrder = Object.values(DRAW_STAGES)
-  const currentIndex = stageOrder.indexOf(currentStage.value)
-  const targetIndex = stageOrder.indexOf(stage)
-  return targetIndex < currentIndex
-}
-
-const getStageText = (stage) => {
-  const stageMap = {
-    [DRAW_STAGES.PERSON]: '抽取人员',
-    [DRAW_STAGES.GIFT]: '抽取礼包',
-    [DRAW_STAGES.COMPLETED]: '完成'
-  }
-  return stageMap[stage]
-}
 
 // 抽奖方法
 const handleDrawPerson = () => {
@@ -757,55 +704,6 @@ onUnmounted(() => {
 
 .candidates-grid::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 77, 79, 0.5);
-}
-
-.stage-indicator {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 24px;
-  padding: 0 20px;
-  position: relative;
-}
-
-.stage-indicator::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 40px;
-  right: 40px;
-  height: 2px;
-  background: #f0f0f0;
-  z-index: 1;
-}
-
-.stage-item {
-  position: relative;
-  width: 120px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #fff;
-  border: 2px solid #f0f0f0;
-  border-radius: 18px;
-  font-size: 14px;
-  color: #999;
-  z-index: 2;
-  transition: all 0.3s ease;
-}
-
-.stage-item.active {
-  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
-  border-color: #ff4d4f;
-  color: #fff;
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.2);
-}
-
-.stage-item.completed {
-  background: #f6ffed;
-  border-color: #52c41a;
-  color: #52c41a;
 }
 
 .draw-main {

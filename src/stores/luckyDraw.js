@@ -54,7 +54,7 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
     // 获取当前抽取按钮的文本
     drawButtonText: (state) => {
       if (state.isDrawing) return '停止'
-      if (state.isCompleted) return '重新开始'
+      if (state.isCompleted) return '抬走，有请下一位'
       if (state.hasDrawnHiddenGift && state.hasHiddenGift) return '继续抽取'
       return '开始抽取'
     }
@@ -167,6 +167,8 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       this.resetCurrent()
       this.winners = []
       this.resetAvailableParticipants()
+      this.isCompleted = false
+      this.currentStage = DRAW_STAGES.PERSON
     }
   }
 }) 
