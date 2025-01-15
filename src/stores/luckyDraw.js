@@ -4,8 +4,14 @@ import { punishmentPools, rewardPools, personRewardPoolMap } from '@/config/pool
 // 抽奖阶段枚举
 export const DRAW_STAGES = {
   PERSON: 'PERSON',
-  GIFT: 'GIFT',      // 改为礼包抽取阶段
+  GIFT: 'GIFT',
   COMPLETED: 'COMPLETED'
+}
+
+// 礼包抽取子阶段枚举
+export const GIFT_STAGES = {
+  TASK: 'TASK',
+  PRIZE: 'PRIZE'
 }
 
 export const useLuckyDrawStore = defineStore('luckyDraw', {
@@ -13,13 +19,14 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
     // 基础状态
     isDrawing: false,
     currentStage: DRAW_STAGES.PERSON,
+    currentGiftStage: GIFT_STAGES.TASK,  // 添加礼包抽取子阶段
     participants: [],
     availableParticipants: [],
     
     // 当前抽中的人
     currentPerson: null,
     
-    // 礼包相关状态（内部仍然区分惩罚和奖励）
+    // 礼包相关状态
     selectedPunishmentPools: [], 
     punishmentResults: [],
     currentRewardPool: null,
@@ -33,7 +40,7 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
     currentStageText: (state) => {
       const stageMap = {
         [DRAW_STAGES.PERSON]: '抽取幸运观众',
-        [DRAW_STAGES.GIFT]: '抽取幸运礼包',
+        [DRAW_STAGES.GIFT]: state.currentGiftStage === GIFT_STAGES.TASK ? '抽取幸运任务' : '抽取幸运奖品',
         [DRAW_STAGES.COMPLETED]: '抽奖完成'
       }
       return stageMap[state.currentStage]
@@ -97,31 +104,41 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       }
     },
 
-    // 抽取礼包（包含惩罚和奖励）
+    // 修改抽取礼包的方法
     async drawGift() {
-      // 在后台处理惩罚抽取
-      for (const pool of this.selectedPunishmentPools) {
-        const punishment = pool.items[Math.floor(Math.random() * pool.items.length)]
-        this.punishmentResults.push(punishment)
+      if (this.currentGiftStage === GIFT_STAGES.TASK) {
+        // 抽取任务
+        this.punishmentResults = []  // 清空之前的结果
+        for (const pool of this.selectedPunishmentPools) {
+          const punishment = pool.items[Math.floor(Math.random() * pool.items.length)]
+          this.punishmentResults.push({
+            poolName: pool.name,
+            name: punishment.name,
+            id: punishment.id
+          })
+        }
+        // 切换到奖品抽取阶段
+        this.currentGiftStage = GIFT_STAGES.PRIZE
+      } else {
+        // 抽取奖励
+        const rewards = this.availablePrizes
+        const reward = rewards[Math.floor(Math.random() * rewards.length)]
+        this.rewardResult = reward
+        
+        // 添加到获奖记录
+        this.winners.push({
+          winner: this.currentPerson,
+          prize: reward,
+          tasks: this.punishmentResults,
+          timestamp: new Date().getTime()
+        })
+        
+        // 完成抽取
+        this.currentStage = DRAW_STAGES.COMPLETED
       }
-      
-      // 抽取奖励
-      const rewards = this.availablePrizes
-      const reward = rewards[Math.floor(Math.random() * rewards.length)]
-      this.rewardResult = reward
-      
-      // 添加到获奖记录
-      this.winners.push({
-        winner: this.currentPerson,
-        prize: reward,
-        tasks: this.punishmentResults,  // 改名为 tasks
-        timestamp: new Date().getTime()
-      })
-      
-      this.currentStage = DRAW_STAGES.COMPLETED
     },
 
-    // 重置当前抽奖
+    // 重置当前抽奖时也重置礼包子阶段
     resetCurrent() {
       this.currentPerson = null
       this.selectedPunishmentPools = []
@@ -129,6 +146,7 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       this.currentRewardPool = null
       this.rewardResult = null
       this.currentStage = DRAW_STAGES.PERSON
+      this.currentGiftStage = GIFT_STAGES.TASK
       this.isDrawing = false
     },
 
