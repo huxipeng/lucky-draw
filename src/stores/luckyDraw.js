@@ -1,76 +1,164 @@
 import { defineStore } from 'pinia'
+import { punishmentPools, rewardPools, personRewardPoolMap } from '@/config/pools'
+
+// 抽奖阶段枚举
+export const DRAW_STAGES = {
+  IDLE: 'idle',              // 初始状态
+  PERSON: 'person',          // 抽人阶段
+  PUNISHMENT_POOLS: 'punishment_pools',  // 抽惩罚池阶段
+  PUNISHMENT: 'punishment',   // 抽惩罚阶段
+  REWARD: 'reward',          // 抽奖励阶段
+  COMPLETED: 'completed'     // 完成状态
+}
 
 export const useLuckyDrawStore = defineStore('luckyDraw', {
   state: () => ({
-    // 奖项设置
-    prizes: [
-      { id: 1, name: '特等奖', count: 1, remaining: 1 },
-      { id: 2, name: '一等奖', count: 3, remaining: 3 },
-      { id: 3, name: '二等奖', count: 5, remaining: 5 },
-      { id: 4, name: '三等奖', count: 10, remaining: 10 },
-    ],
-    // 参与人员列表
+    // 基础状态
+    isDrawing: false,
+    currentStage: DRAW_STAGES.IDLE,
     participants: [],
-    // 中奖记录
-    winners: [],
-    // 当前选中的人员
+    availableParticipants: [],
+    
+    // 当前抽中的人
     currentPerson: null,
-    // 抽奖状态
-    isDrawing: false
+    
+    // 惩罚相关状态
+    selectedPunishmentPools: [], // 被选中的惩罚池
+    currentPunishmentPool: null, // 当前正在抽取的惩罚池
+    punishmentResults: [],       // 抽中的惩罚结果
+    
+    // 奖励相关状态
+    currentRewardPool: null,     // 当前可用的奖励池
+    rewardResult: null,          // 抽中的奖励结果
+    
+    // 历史记录
+    winners: []
   }),
 
+  getters: {
+    // 现有的 getters
+    availablePrizes: (state) => {
+      if (!state.currentRewardPool) return []
+      return state.currentRewardPool.items.filter(item => 
+        !state.winners.some(w => w.prize.id === item.id)
+      )
+    },
+    
+    // 新增 getters
+    currentStageText: (state) => {
+      const stageMap = {
+        [DRAW_STAGES.IDLE]: '准备开始',
+        [DRAW_STAGES.PERSON]: '抽取幸运观众',
+        [DRAW_STAGES.PUNISHMENT_POOLS]: '抽取惩罚池',
+        [DRAW_STAGES.PUNISHMENT]: '抽取惩罚',
+        [DRAW_STAGES.REWARD]: '抽取奖励',
+        [DRAW_STAGES.COMPLETED]: '抽奖完成'
+      }
+      return stageMap[state.currentStage]
+    },
+    
+    canProceedToNextStage: (state) => {
+      switch (state.currentStage) {
+        case DRAW_STAGES.PUNISHMENT:
+          return state.punishmentResults.length === state.selectedPunishmentPools.length
+        case DRAW_STAGES.REWARD:
+          return !!state.rewardResult
+        default:
+          return true
+      }
+    }
+  },
+
   actions: {
-    // 导入参与人员
-    importParticipants(list) {
-      this.participants = list
+    // 导入参与者
+    importParticipants(participants) {
+      this.participants = participants
+      this.resetAvailableParticipants()
     },
-    // 设置当前选中的人员
-    setCurrentPerson(person) {
-      this.currentPerson = person
+
+    // 重置可用参与者
+    resetAvailableParticipants() {
+      this.availableParticipants = [...this.participants]
     },
+
     // 开始抽奖
     startDraw() {
       this.isDrawing = true
     },
+
     // 停止抽奖
     stopDraw() {
       this.isDrawing = false
     },
-    // 记录中奖者
-    addWinner(prize) {
+
+    // 设置当前抽中的人
+    setCurrentPerson(person) {
+      this.currentPerson = person
+      this.availableParticipants = this.availableParticipants.filter(p => p.id !== person.id)
+      
+      // 设置对应的奖励池
+      const poolId = personRewardPoolMap[person.name]
+      this.currentRewardPool = rewardPools.find(pool => pool.id === poolId)
+      
+      // 进入下一阶段
+      this.currentStage = DRAW_STAGES.PUNISHMENT_POOLS
+    },
+
+    // 抽取惩罚池数量
+    drawPunishmentPools() {
+      const count = Math.floor(Math.random() * 4) // 0-3个
+      const availablePools = [...punishmentPools]
+      this.selectedPunishmentPools = []
+      
+      for (let i = 0; i < count; i++) {
+        const randomIndex = Math.floor(Math.random() * availablePools.length)
+        this.selectedPunishmentPools.push(availablePools.splice(randomIndex, 1)[0])
+      }
+      
+      this.currentStage = count > 0 ? DRAW_STAGES.PUNISHMENT : DRAW_STAGES.REWARD
+    },
+
+    // 添加惩罚结果
+    addPunishmentResult(punishment) {
+      this.punishmentResults.push(punishment)
+      
+      // 检查是否所有惩罚池都抽取完成
+      if (this.punishmentResults.length === this.selectedPunishmentPools.length) {
+        this.currentStage = DRAW_STAGES.REWARD
+      }
+    },
+
+    // 添加奖励结果
+    addRewardResult(reward) {
+      this.rewardResult = reward
+      this.currentStage = DRAW_STAGES.COMPLETED
+      
+      // 添加到获奖记录
       this.winners.push({
         winner: this.currentPerson,
-        prize: prize,
-        timestamp: new Date().toISOString()
+        prize: reward,
+        punishments: this.punishmentResults,
+        timestamp: new Date().getTime()
       })
-      // 更新奖项剩余数量
-      const prizeToUpdate = this.prizes.find(p => p.id === prize.id)
-      if (prizeToUpdate) {
-        prizeToUpdate.remaining--
-      }
-      // 清空当前选中的人员
-      this.currentPerson = null
     },
-    // 重置抽奖
-    reset() {
-      this.prizes.forEach(prize => {
-        prize.remaining = prize.count
-      })
-      this.winners = []
-      this.currentPerson = null
-      this.isDrawing = false
-    }
-  },
 
-  getters: {
-    // 获取可用奖项
-    availablePrizes: (state) => {
-      return state.prizes.filter(prize => prize.remaining > 0)
+    // 重置当前抽奖
+    resetCurrent() {
+      this.currentPerson = null
+      this.selectedPunishmentPools = []
+      this.currentPunishmentPool = null
+      this.punishmentResults = []
+      this.currentRewardPool = null
+      this.rewardResult = null
+      this.currentStage = DRAW_STAGES.IDLE
+      this.isDrawing = false
     },
-    // 获取未中奖的参与者
-    availableParticipants: (state) => {
-      const winnerIds = state.winners.map(w => w.winner.id)
-      return state.participants.filter(p => !winnerIds.includes(p.id))
+
+    // 完全重置
+    reset() {
+      this.resetCurrent()
+      this.winners = []
+      this.resetAvailableParticipants()
     }
   }
 }) 

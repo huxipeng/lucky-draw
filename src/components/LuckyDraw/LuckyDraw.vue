@@ -3,16 +3,27 @@
     <a-row :gutter="[16, 16]" class="draw-container">
       <!-- 左侧抽奖区域 -->
       <a-col :span="16">
-        <a-card title="抽奖区域" class="draw-area">
-          <div class="rolling-box" ref="rollingBox">
-            <div class="selected-info" v-if="store.currentPerson">
-              <div class="selected-person">{{ store.currentPerson.name }}</div>
-              <div class="selected-prize" v-if="currentRollingPrize">
-                {{ currentRollingPrize }}
-              </div>
+        <a-card class="draw-area">
+          <!-- 抽奖阶段指示器 -->
+          <div class="stage-indicator">
+            <div 
+              v-for="(stage, key) in DRAW_STAGES" 
+              :key="key"
+              class="stage-item"
+              :class="{
+                'active': currentStage === stage,
+                'completed': isStageCompleted(stage)
+              }"
+            >
+              {{ getStageText(stage) }}
             </div>
-            <template v-if="!store.currentPerson">
-              <div class="candidates-grid">
+          </div>
+
+          <!-- 抽奖主区域 -->
+          <div class="draw-main">
+            <!-- 抽人阶段 -->
+            <div v-if="currentStage === DRAW_STAGES.PERSON || currentStage === DRAW_STAGES.IDLE" class="draw-section">
+              <div class="candidates-grid" v-if="!isDrawing">
                 <div
                   v-for="participant in store.availableParticipants"
                   :key="participant.id"
@@ -22,44 +33,136 @@
                   {{ participant.name }}
                 </div>
               </div>
-            </template>
+              <div v-else class="rolling-display">
+                <div class="rolling-name">{{ currentRollingName || '准备开始' }}</div>
+              </div>
+            </div>
+
+            <!-- 抽取惩罚池阶段 -->
+            <div v-if="currentStage === DRAW_STAGES.PUNISHMENT_POOLS" class="draw-section">
+              <div class="selected-person">
+                恭喜 {{ store.currentPerson?.name }}
+              </div>
+              <div class="pools-grid">
+                <div
+                  v-for="pool in punishmentPools"
+                  :key="pool.id"
+                  class="pool-item"
+                  :class="{ 
+                    'selected': isPoolSelected(pool.id),
+                    'rolling': isDrawing 
+                  }"
+                >
+                  {{ pool.name }}
+                </div>
+              </div>
+            </div>
+
+            <!-- 抽取惩罚阶段 -->
+            <div v-if="currentStage === DRAW_STAGES.PUNISHMENT" class="draw-section">
+              <div class="punishment-info">
+                <div class="current-pool">
+                  当前惩罚池：{{ currentPunishmentPool?.name }}
+                </div>
+                <div class="rolling-punishment" v-if="isDrawing">
+                  {{ currentRollingPunishment }}
+                </div>
+              </div>
+              <div class="results-list">
+                <div v-for="(result, index) in store.punishmentResults" :key="index" class="result-item">
+                  {{ result.name }}
+                </div>
+              </div>
+            </div>
+
+            <!-- 抽取奖励阶段 -->
+            <div v-if="currentStage === DRAW_STAGES.REWARD" class="draw-section">
+              <div class="reward-info">
+                <div class="pool-name">
+                  奖励池：{{ store.currentRewardPool?.name }}
+                </div>
+                <div class="rolling-reward" v-if="isDrawing">
+                  {{ currentRollingReward }}
+                </div>
+              </div>
+            </div>
+
+            <!-- 完成阶段 -->
+            <div v-if="currentStage === DRAW_STAGES.COMPLETED" class="draw-section">
+              <div class="result-summary">
+                <div class="winner-name">
+                  {{ store.currentPerson?.name }}
+                </div>
+                <div class="punishments-list" v-if="store.punishmentResults.length">
+                  <div class="list-title">获得惩罚：</div>
+                  <div v-for="(punishment, index) in store.punishmentResults" :key="index" class="punishment-item">
+                    {{ punishment.name }}
+                  </div>
+                </div>
+                <div class="reward-result">
+                  <div class="list-title">获得奖励：</div>
+                  <div class="reward-item">{{ store.rewardResult?.name }}</div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="draw-info">
+
+          <!-- 控制按钮区域 -->
+          <div class="control-area">
             <div class="info-row">
               <span class="participant-info">
                 待抽奖人数: {{ store.availableParticipants.length }}
               </span>
-              <span class="prize-info">
-                剩余奖项: 
-                <template v-for="prize in store.prizes" :key="prize.id">
-                  {{ prize.name }}({{ prize.remaining }}) 
-                </template>
+              <span class="stage-info">
+                当前阶段: {{ store.currentStageText }}
               </span>
             </div>
             <div class="action-buttons">
-              <template v-if="!store.currentPerson">
+              <template v-if="currentStage === DRAW_STAGES.PERSON || currentStage === DRAW_STAGES.IDLE">
                 <a-button
                   type="primary"
                   :disabled="!canDrawPerson"
-                  @click="toggleDrawPerson"
+                  @click="handleDrawPerson"
                   :loading="isDrawing"
                   size="large"
                 >
                   {{ isDrawing ? '停止' : '开始抽人' }}
                 </a-button>
               </template>
-              <template v-else>
+              <template v-else-if="currentStage === DRAW_STAGES.PUNISHMENT_POOLS">
                 <a-button
                   type="primary"
-                  :disabled="!canDrawPrize"
-                  @click="toggleDrawPrize"
+                  @click="handleDrawPunishmentPools"
+                  size="large"
+                >
+                  抽取惩罚池
+                </a-button>
+              </template>
+              <template v-else-if="currentStage === DRAW_STAGES.PUNISHMENT">
+                <a-button
+                  type="primary"
+                  @click="handleDrawPunishment"
                   :loading="isDrawing"
                   size="large"
                 >
-                  {{ isDrawing ? '停止' : '开始抽奖' }}
+                  {{ isDrawing ? '停止' : '抽取惩罚' }}
                 </a-button>
               </template>
-              <a-button @click="resetDraw" :disabled="isDrawing" size="large">
+              <template v-else-if="currentStage === DRAW_STAGES.REWARD">
+                <a-button
+                  type="primary"
+                  @click="handleDrawReward"
+                  :loading="isDrawing"
+                  size="large"
+                >
+                  {{ isDrawing ? '停止' : '抽取奖励' }}
+                </a-button>
+              </template>
+              <a-button 
+                @click="handleReset" 
+                :disabled="isDrawing || currentStage === DRAW_STAGES.IDLE"
+                size="large"
+              >
                 重置
               </a-button>
             </div>
@@ -71,7 +174,7 @@
       <a-col :span="8">
         <a-card title="中奖记录" class="winners-area">
           <a-table 
-            :dataSource="winners" 
+            :dataSource="store.winners" 
             :columns="columns" 
             :pagination="{ pageSize: 10 }"
             size="middle"
@@ -84,23 +187,24 @@
 
 <script setup>
 import { ref, computed, onUnmounted, onMounted } from 'vue'
-import { useLuckyDrawStore } from '@/stores/luckyDraw'
+import { useLuckyDrawStore, DRAW_STAGES } from '@/stores/luckyDraw'
 import { message } from 'ant-design-vue'
 import { participants } from '@/config/participants'
+import { punishmentPools } from '@/config/pools'
 
 const store = useLuckyDrawStore()
+const currentStage = computed(() => store.currentStage)
 
 // 状态
 const currentRollingName = ref('')
-const currentRollingPrize = ref('')
+const currentRollingPunishment = ref('')
+const currentRollingReward = ref('')
 let rollingTimer = null
 let autoStopTimer = null
 
 // 计算属性
 const canDrawPerson = computed(() => store.availableParticipants.length > 0)
-const canDrawPrize = computed(() => store.availablePrizes.length > 0)
 const isDrawing = computed(() => store.isDrawing)
-const winners = computed(() => store.winners)
 
 // 表格列定义
 const columns = [
@@ -111,79 +215,49 @@ const columns = [
     align: 'center'
   },
   {
-    title: '奖项',
+    title: '惩罚',
+    dataIndex: 'punishments',
+    key: 'punishments',
+    align: 'center',
+    customRender: ({ text }) => text.map(p => p.name).join('、') || '无'
+  },
+  {
+    title: '奖励',
     dataIndex: ['prize', 'name'],
     key: 'prize',
     align: 'center'
   },
   {
-    title: '中奖时间',
+    title: '时间',
     dataIndex: 'timestamp',
     key: 'timestamp',
     align: 'center',
-    customRender: ({ text }) => new Date(text).toLocaleString(),
-  },
+    customRender: ({ text }) => new Date(text).toLocaleString()
+  }
 ]
 
-// 方法
-const startRollingName = () => {
-  let lastIndex = -1;
-  rollingTimer = setInterval(() => {
-    const participants = store.availableParticipants;
-    let randomIndex;
-    // 确保不会连续选中同一个人
-    do {
-      randomIndex = Math.floor(Math.random() * participants.length);
-    } while (randomIndex === lastIndex && participants.length > 1);
-    
-    lastIndex = randomIndex;
-    currentRollingName.value = participants[randomIndex].name;
-  }, 100); // 稍微降低速度，让动画更清晰
-
-  // 随机 3-5 秒后停止
-  const randomDuration = 3000 + Math.random() * 2000;
-  autoStopTimer = setTimeout(() => {
-    if (isDrawing.value) {
-      toggleDrawPerson();
-    }
-  }, randomDuration);
+// 阶段判断方法
+const isStageCompleted = (stage) => {
+  const stageOrder = Object.values(DRAW_STAGES)
+  const currentIndex = stageOrder.indexOf(currentStage.value)
+  const targetIndex = stageOrder.indexOf(stage)
+  return targetIndex < currentIndex
 }
 
-const startRollingPrize = () => {
-  let lastIndex = -1;
-  rollingTimer = setInterval(() => {
-    const prizes = store.availablePrizes;
-    let randomIndex;
-    // 确保不会连续选中同一个奖项
-    do {
-      randomIndex = Math.floor(Math.random() * prizes.length);
-    } while (randomIndex === lastIndex && prizes.length > 1);
-    
-    lastIndex = randomIndex;
-    currentRollingPrize.value = prizes[randomIndex].name;
-  }, 100);
-
-  // 随机 3-5 秒后停止
-  const randomDuration = 3000 + Math.random() * 2000;
-  autoStopTimer = setTimeout(() => {
-    if (isDrawing.value) {
-      toggleDrawPrize();
-    }
-  }, randomDuration);
-}
-
-const stopRolling = () => {
-  if (rollingTimer) {
-    clearInterval(rollingTimer)
-    rollingTimer = null
+const getStageText = (stage) => {
+  const stageMap = {
+    [DRAW_STAGES.IDLE]: '准备开始',
+    [DRAW_STAGES.PERSON]: '抽取人员',
+    [DRAW_STAGES.PUNISHMENT_POOLS]: '抽取惩罚池',
+    [DRAW_STAGES.PUNISHMENT]: '抽取惩罚',
+    [DRAW_STAGES.REWARD]: '抽取奖励',
+    [DRAW_STAGES.COMPLETED]: '完成'
   }
-  if (autoStopTimer) {
-    clearTimeout(autoStopTimer)
-    autoStopTimer = null
-  }
+  return stageMap[stage]
 }
 
-const toggleDrawPerson = () => {
+// 抽奖方法
+const handleDrawPerson = () => {
   if (!isDrawing.value) {
     // 开始抽人
     store.startDraw()
@@ -201,29 +275,137 @@ const toggleDrawPerson = () => {
   }
 }
 
-const toggleDrawPrize = () => {
-  if (!isDrawing.value) {
-    // 开始抽奖
-    store.startDraw()
-    startRollingPrize()
+const handleDrawPunishmentPools = () => {
+  store.drawPunishmentPools()
+  if (store.selectedPunishmentPools.length > 0) {
+    message.success(`抽中 ${store.selectedPunishmentPools.length} 个惩罚池`)
   } else {
-    // 停止抽奖
-    store.stopDraw()
-    stopRolling()
-    // 选择奖项
-    const prizes = store.availablePrizes
-    const prize = prizes[Math.floor(Math.random() * prizes.length)]
-    store.addWinner(prize)
-    currentRollingPrize.value = ''
-    message.success(`恭喜 ${store.currentPerson.name} 获得 ${prize.name}！`)
+    message.success('本次无需执行惩罚')
   }
 }
 
-const resetDraw = () => {
-  store.reset()
+const handleDrawPunishment = () => {
+  if (!isDrawing.value) {
+    // 开始抽惩罚
+    store.startDraw()
+    startRollingPunishment()
+  } else {
+    // 停止抽惩罚
+    store.stopDraw()
+    stopRolling()
+    // 从当前惩罚池中选择
+    const pool = store.selectedPunishmentPools[store.punishmentResults.length]
+    const punishment = pool.items[Math.floor(Math.random() * pool.items.length)]
+    store.addPunishmentResult(punishment)
+    currentRollingPunishment.value = ''
+    message.success(`抽中惩罚: ${punishment.name}`)
+  }
+}
+
+const handleDrawReward = () => {
+  if (!isDrawing.value) {
+    // 开始抽奖励
+    store.startDraw()
+    startRollingReward()
+  } else {
+    // 停止抽奖励
+    store.stopDraw()
+    stopRolling()
+    // 从奖励池中选择
+    const rewards = store.availablePrizes
+    const reward = rewards[Math.floor(Math.random() * rewards.length)]
+    store.addRewardResult(reward)
+    currentRollingReward.value = ''
+    message.success(`恭喜获得: ${reward.name}`)
+  }
+}
+
+const handleReset = () => {
+  store.resetCurrent()
   currentRollingName.value = ''
-  currentRollingPrize.value = ''
-  message.success('抽奖已重置')
+  currentRollingPunishment.value = ''
+  currentRollingReward.value = ''
+  message.success('已重置当前抽奖')
+}
+
+// 滚动效果
+const startRollingName = () => {
+  let lastIndex = -1
+  rollingTimer = setInterval(() => {
+    const participants = store.availableParticipants
+    let randomIndex
+    do {
+      randomIndex = Math.floor(Math.random() * participants.length)
+    } while (randomIndex === lastIndex && participants.length > 1)
+    
+    lastIndex = randomIndex
+    currentRollingName.value = participants[randomIndex].name
+  }, 100)
+
+  const randomDuration = 3000 + Math.random() * 2000
+  autoStopTimer = setTimeout(() => {
+    if (isDrawing.value) {
+      handleDrawPerson()
+    }
+  }, randomDuration)
+}
+
+const startRollingPunishment = () => {
+  const pool = store.selectedPunishmentPools[store.punishmentResults.length]
+  let lastIndex = -1
+  rollingTimer = setInterval(() => {
+    let randomIndex
+    do {
+      randomIndex = Math.floor(Math.random() * pool.items.length)
+    } while (randomIndex === lastIndex && pool.items.length > 1)
+    
+    lastIndex = randomIndex
+    currentRollingPunishment.value = pool.items[randomIndex].name
+  }, 100)
+
+  const randomDuration = 3000 + Math.random() * 2000
+  autoStopTimer = setTimeout(() => {
+    if (isDrawing.value) {
+      handleDrawPunishment()
+    }
+  }, randomDuration)
+}
+
+const startRollingReward = () => {
+  let lastIndex = -1
+  rollingTimer = setInterval(() => {
+    const rewards = store.availablePrizes
+    let randomIndex
+    do {
+      randomIndex = Math.floor(Math.random() * rewards.length)
+    } while (randomIndex === lastIndex && rewards.length > 1)
+    
+    lastIndex = randomIndex
+    currentRollingReward.value = rewards[randomIndex].name
+  }, 100)
+
+  const randomDuration = 3000 + Math.random() * 2000
+  autoStopTimer = setTimeout(() => {
+    if (isDrawing.value) {
+      handleDrawReward()
+    }
+  }, randomDuration)
+}
+
+const stopRolling = () => {
+  if (rollingTimer) {
+    clearInterval(rollingTimer)
+    rollingTimer = null
+  }
+  if (autoStopTimer) {
+    clearTimeout(autoStopTimer)
+    autoStopTimer = null
+  }
+}
+
+// 惩罚池相关方法
+const isPoolSelected = (poolId) => {
+  return store.selectedPunishmentPools.some(pool => pool.id === poolId)
 }
 
 // 组件挂载时导入参与者名单
@@ -504,5 +686,212 @@ onUnmounted(() => {
 
 .candidates-grid::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 77, 79, 0.5);
+}
+
+.stage-indicator {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding: 0 20px;
+  position: relative;
+}
+
+.stage-indicator::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 40px;
+  right: 40px;
+  height: 2px;
+  background: #f0f0f0;
+  z-index: 1;
+}
+
+.stage-item {
+  position: relative;
+  width: 120px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 2px solid #f0f0f0;
+  border-radius: 18px;
+  font-size: 14px;
+  color: #999;
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+.stage-item.active {
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  border-color: #ff4d4f;
+  color: #fff;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.2);
+}
+
+.stage-item.completed {
+  background: #f6ffed;
+  border-color: #52c41a;
+  color: #52c41a;
+}
+
+.draw-main {
+  min-height: 400px;
+  background: linear-gradient(135deg, #fff5f5 0%, #fff1f0 100%);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 77, 79, 0.1);
+}
+
+.draw-section {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.rolling-display {
+  text-align: center;
+  padding: 40px;
+}
+
+.rolling-name {
+  font-size: 48px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textGlow 2s ease-in-out infinite;
+}
+
+.pools-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.pool-item {
+  width: 160px;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  font-size: 24px;
+  color: #666;
+  transition: all 0.3s ease;
+  border: 2px solid rgba(255, 77, 79, 0.1);
+  cursor: pointer;
+}
+
+.pool-item.selected {
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  color: #fff;
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(255, 77, 79, 0.2);
+}
+
+.pool-item.rolling {
+  animation: poolPulse 1s ease-in-out infinite;
+}
+
+@keyframes poolPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.punishment-info, .reward-info {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.current-pool, .pool-name {
+  font-size: 24px;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.rolling-punishment, .rolling-reward {
+  font-size: 36px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textGlow 2s ease-in-out infinite;
+}
+
+.results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.result-item {
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  font-size: 18px;
+  color: #666;
+  box-shadow: 0 2px 8px rgba(255, 77, 79, 0.1);
+}
+
+.result-summary {
+  text-align: center;
+  padding: 30px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(255, 77, 79, 0.1);
+}
+
+.winner-name {
+  font-size: 48px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 24px;
+}
+
+.list-title {
+  font-size: 18px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.punishment-item, .reward-item {
+  font-size: 24px;
+  color: #ff4d4f;
+  margin-bottom: 8px;
+}
+
+.control-area {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* 更新现有样式 */
+.info-row {
+  margin-bottom: 20px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.action-buttons :deep(.ant-btn) {
+  min-width: 160px;
 }
 </style> 
