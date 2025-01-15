@@ -3,19 +3,18 @@ import { punishmentPools, rewardPools, personRewardPoolMap } from '@/config/pool
 
 // 抽奖阶段枚举
 export const DRAW_STAGES = {
-  IDLE: 'idle',              // 初始状态
-  PERSON: 'person',          // 抽人阶段
-  PUNISHMENT_POOLS: 'punishment_pools',  // 抽惩罚池阶段
-  PUNISHMENT: 'punishment',   // 抽惩罚阶段
-  REWARD: 'reward',          // 抽奖励阶段
-  COMPLETED: 'completed'     // 完成状态
+  PERSON: 'PERSON',
+  PUNISHMENT_POOLS: 'PUNISHMENT_POOLS',
+  PUNISHMENT: 'PUNISHMENT',
+  REWARD: 'REWARD',
+  COMPLETED: 'COMPLETED'
 }
 
 export const useLuckyDrawStore = defineStore('luckyDraw', {
   state: () => ({
     // 基础状态
     isDrawing: false,
-    currentStage: DRAW_STAGES.IDLE,
+    currentStage: DRAW_STAGES.PERSON,
     participants: [],
     availableParticipants: [],
     
@@ -47,7 +46,6 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
     // 新增 getters
     currentStageText: (state) => {
       const stageMap = {
-        [DRAW_STAGES.IDLE]: '准备开始',
         [DRAW_STAGES.PERSON]: '抽取幸运观众',
         [DRAW_STAGES.PUNISHMENT_POOLS]: '抽取惩罚池',
         [DRAW_STAGES.PUNISHMENT]: '抽取惩罚',
@@ -150,7 +148,7 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       this.punishmentResults = []
       this.currentRewardPool = null
       this.rewardResult = null
-      this.currentStage = DRAW_STAGES.IDLE
+      this.currentStage = DRAW_STAGES.PERSON
       this.isDrawing = false
     },
 

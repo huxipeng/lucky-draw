@@ -1,28 +1,34 @@
 <template>
   <div class="stage-container">
-    <div class="candidates-grid" v-if="!isDrawing">
+    <div class="candidates-grid">
       <div
         v-for="participant in participants"
         :key="participant.id"
         class="candidate-item"
-        :class="{ active: participant.name === currentName }"
+        :class="{ 
+          'active': !isDrawing && participant.name === currentName,
+          'highlight': isDrawing && participant.name === highlightName
+        }"
       >
         {{ participant.name }}
       </div>
-    </div>
-    <div v-else class="rolling-display">
-      <div class="rolling-name">{{ currentName || '准备开始' }}</div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { defineProps } from 'vue'
+
 defineProps({
   participants: {
     type: Array,
     required: true
   },
   currentName: {
+    type: String,
+    default: ''
+  },
+  highlightName: {
     type: String,
     default: ''
   },
@@ -60,12 +66,21 @@ defineProps({
   border-radius: 6px;
   font-size: 15px;
   color: #666;
-  transition: all 0.3s ease;
+  transition: all 0.15s ease;
   border: 1px solid rgba(255, 77, 79, 0.1);
   position: relative;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.candidate-item.highlight {
+  color: #fff;
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.2);
+  z-index: 1;
+  font-weight: bold;
 }
 
 .candidate-item.active {
@@ -75,24 +90,5 @@ defineProps({
   box-shadow: 0 4px 12px rgba(255, 77, 79, 0.2);
   z-index: 1;
   font-weight: bold;
-}
-
-.rolling-display {
-  text-align: center;
-  padding: 40px;
-}
-
-.rolling-name {
-  font-size: 48px;
-  font-weight: bold;
-  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: textGlow 2s ease-in-out infinite;
-}
-
-@keyframes textGlow {
-  0%, 100% { opacity: 0.9; }
-  50% { opacity: 1; }
 }
 </style> 

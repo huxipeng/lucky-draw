@@ -22,19 +22,19 @@
           <!-- 抽奖主区域 -->
           <div class="draw-main">
             <!-- 抽人阶段 -->
-            <div v-if="currentStage === DRAW_STAGES.PERSON || currentStage === DRAW_STAGES.IDLE" class="draw-section">
-              <div class="candidates-grid" v-if="!isDrawing">
+            <div v-if="currentStage === DRAW_STAGES.PERSON" class="draw-section">
+              <div class="candidates-grid">
                 <div
                   v-for="participant in store.availableParticipants"
                   :key="participant.id"
                   class="candidate-item"
-                  :class="{ active: participant.name === currentRollingName }"
+                  :class="{ 
+                    'active': !isDrawing && participant.name === currentRollingName,
+                    'highlight': isDrawing && participant.name === currentRollingName 
+                  }"
                 >
                   {{ participant.name }}
                 </div>
-              </div>
-              <div v-else class="rolling-display">
-                <div class="rolling-name">{{ currentRollingName || '准备开始' }}</div>
               </div>
             </div>
 
@@ -118,7 +118,7 @@
               </span>
             </div>
             <div class="action-buttons">
-              <template v-if="currentStage === DRAW_STAGES.PERSON || currentStage === DRAW_STAGES.IDLE">
+              <template v-if="currentStage === DRAW_STAGES.PERSON">
                 <a-button
                   type="primary"
                   :disabled="!canDrawPerson"
@@ -201,6 +201,8 @@ const currentRollingPunishment = ref('')
 const currentRollingReward = ref('')
 let rollingTimer = null
 let autoStopTimer = null
+const highlightName = ref('')
+let highlightTimer = null
 
 // 计算属性
 const canDrawPerson = computed(() => store.availableParticipants.length > 0)
@@ -246,7 +248,6 @@ const isStageCompleted = (stage) => {
 
 const getStageText = (stage) => {
   const stageMap = {
-    [DRAW_STAGES.IDLE]: '准备开始',
     [DRAW_STAGES.PERSON]: '抽取人员',
     [DRAW_STAGES.PUNISHMENT_POOLS]: '抽取惩罚池',
     [DRAW_STAGES.PUNISHMENT]: '抽取惩罚',
@@ -340,7 +341,7 @@ const startRollingName = () => {
     
     lastIndex = randomIndex
     currentRollingName.value = participants[randomIndex].name
-  }, 100)
+  }, 50)
 
   const randomDuration = 3000 + Math.random() * 2000
   autoStopTimer = setTimeout(() => {
@@ -408,6 +409,32 @@ const isPoolSelected = (poolId) => {
   return store.selectedPunishmentPools.some(pool => pool.id === poolId)
 }
 
+const startDraw = () => {
+  isDrawing.value = true
+  startHighlight()
+}
+
+const startHighlight = () => {
+  if (highlightTimer) {
+    clearInterval(highlightTimer)
+  }
+  
+  highlightTimer = setInterval(() => {
+    const randomIndex = Math.floor(Math.random() * participants.value.length)
+    highlightName.value = participants.value[randomIndex].name
+  }, 100)
+}
+
+const stopDraw = () => {
+  if (highlightTimer) {
+    clearInterval(highlightTimer)
+    highlightTimer = null
+  }
+  isDrawing.value = false
+  highlightName.value = ''
+  // 其他停止逻辑...
+}
+
 // 组件挂载时导入参与者名单
 onMounted(() => {
   store.importParticipants(participants)
@@ -416,6 +443,9 @@ onMounted(() => {
 // 组件销毁时清理定时器
 onUnmounted(() => {
   stopRolling()
+  if (highlightTimer) {
+    clearInterval(highlightTimer)
+  }
 })
 </script>
 
@@ -472,12 +502,22 @@ onUnmounted(() => {
   border-radius: 6px;
   font-size: 15px;
   color: #666;
-  transition: all 0.3s ease;
+  transition: all 0.15s ease;
   border: 1px solid rgba(255, 77, 79, 0.1);
   position: relative;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  cursor: default;
+}
+
+.candidate-item.highlight {
+  color: #fff;
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.2);
+  z-index: 1;
+  font-weight: bold;
 }
 
 .candidate-item.active {
@@ -489,7 +529,7 @@ onUnmounted(() => {
   font-weight: bold;
 }
 
-.candidate-item.active::before {
+.candidate-item.highlight::after {
   content: '';
   position: absolute;
   top: 0;
@@ -497,7 +537,7 @@ onUnmounted(() => {
   right: 0;
   bottom: 0;
   background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2) 0%, transparent 70%);
-  animation: glowPulse 1s ease-in-out infinite;
+  animation: glowPulse 0.5s ease-in-out infinite;
 }
 
 @keyframes glowPulse {
