@@ -6,6 +6,13 @@
           <h1>
             <span class="event-name">2024年承信&目光年会</span>
           </h1>
+          <div 
+            class="header-fullscreen-btn"
+            @click="toggleFullscreen"
+          >
+            <FullscreenOutlined v-if="!isFullscreen" />
+            <FullscreenExitOutlined v-else />
+          </div>
         </div>
       </a-layout-header>
       <a-layout-content class="content">
@@ -20,6 +27,37 @@
 
 <script setup>
 import LuckyDraw from './components/LuckyDraw/LuckyDraw.vue'
+import { FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons-vue'
+import { ref, onMounted } from 'vue'
+
+const isFullscreen = ref(false)
+
+const toggleFullscreen = async () => {
+  console.log('toggleFullscreen', document.fullscreenElement)
+  if (!document.fullscreenElement) {
+    try {
+      await document.documentElement.requestFullscreen()
+      isFullscreen.value = true
+    } catch (err) {
+      console.error('Error attempting to enable full-screen:', err)
+    }
+  } else {
+    try {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen()
+        isFullscreen.value = false
+      }
+    } catch (err) {
+      console.error('Error attempting to exit full-screen:', err)
+    }
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('fullscreenchange', () => {
+    isFullscreen.value = !!document.fullscreenElement
+  })
+})
 </script>
 
 <style>
@@ -44,7 +82,7 @@ import LuckyDraw from './components/LuckyDraw/LuckyDraw.vue'
   box-shadow: 0 4px 20px rgba(177, 30, 49, 0.4);
   position: relative;
   z-index: 1;
-  overflow: hidden;
+  overflow: visible;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -102,24 +140,47 @@ import LuckyDraw from './components/LuckyDraw/LuckyDraw.vue'
 }
 
 .header-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  height: 80px;
+  max-width: 100%;
+  margin: 0 24px;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   position: relative;
 }
 
-.header h1 {
+.header-content h1 {
   margin: 0;
-  font-size: 32px;
+  font-size: 20px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.header-fullscreen-btn {
+  position: fixed;
+  right: 24px;
+  top: 12px;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 4px !important;
   display: flex;
   align-items: center;
-  gap: 20px;
-  color: #fff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  position: relative;
+  justify-content: center;
+  background: transparent !important;
+  transition: all 0.3s ease;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+.header-fullscreen-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: #fff !important;
+}
+
+.header-fullscreen-btn :deep(.anticon) {
+  font-size: 18px;
+  color: #fff !important;
 }
 
 .company-name {

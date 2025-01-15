@@ -4,6 +4,12 @@
       <!-- 左侧抽奖区域 -->
       <a-col :span="16">
         <a-card class="draw-area">
+          <template #title>
+            <div class="card-title-wrapper">
+              <span>幸运抽奖</span>
+            </div>
+          </template>
+
           <!-- 抽奖阶段指示器 -->
           <div class="stage-indicator">
             <div 
@@ -47,16 +53,36 @@
                 <div class="rolling-gift" v-if="isDrawing">
                   {{ currentRollingGift }}
                 </div>
-                <div v-else-if="showHiddenGift" class="hidden-gift-reveal">
-                  <div class="reveal-title">🎉 恭喜抽中隐藏礼包！</div>
-                  <div class="tasks-preview">
-                    <div class="tasks-grid">
-                      <div v-for="(task, index) in store.punishmentResults" :key="index" class="task-item">
-                        {{ task.name }}
+                <template v-else>
+                  <!-- 显示隐藏礼包 -->
+                  <div v-if="showHiddenGift" class="hidden-gift-reveal">
+                    <div class="reveal-title">🎉 恭喜抽中隐藏礼包！</div>
+                    <div class="tasks-preview">
+                      <div class="tasks-grid">
+                        <div v-for="(task, index) in store.punishmentResults" :key="index" class="task-item">
+                          {{ task.name }}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                  <!-- 显示最终结果 -->
+                  <div v-if="store.isCompleted" class="result-summary">
+                    <div class="gift-content">
+                      <template v-if="store.punishmentResults.length">
+                        <div class="list-title">幸运任务：</div>
+                        <div class="tasks-grid">
+                          <div v-for="(task, index) in store.punishmentResults" :key="index" class="task-item">
+                            {{ task.name }}
+                          </div>
+                        </div>
+                      </template>
+                      <div class="reward-result">
+                        <div class="list-title">幸运奖品：</div>
+                        <div class="reward-item">{{ store.rewardResult?.name }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </template>
               </div>
             </div>
 
@@ -890,11 +916,12 @@ onUnmounted(() => {
 }
 
 .result-summary {
-  text-align: center;
+  margin-top: 30px;
   padding: 30px;
   background: rgba(255, 255, 255, 0.9);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(255, 77, 79, 0.1);
+  animation: fadeInUp 0.5s ease-out;
 }
 
 .winner-name {
@@ -1075,5 +1102,132 @@ onUnmounted(() => {
   to {
     opacity: 1;
   }
+}
+
+.gift-content {
+  text-align: center;
+}
+
+.reward-result {
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(255, 77, 79, 0.05);
+  border-radius: 12px;
+}
+
+.reward-item {
+  font-size: 32px;
+  font-weight: bold;
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 10px 0;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.fullscreen-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+}
+
+.fullscreen-btn :deep(.ant-btn) {
+  width: 40px;
+  height: 40px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 77, 79, 0.1);
+}
+
+.fullscreen-btn :deep(.ant-btn:hover) {
+  background: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.2);
+}
+
+.fullscreen-btn :deep(.anticon) {
+  font-size: 20px;
+  color: #ff4d4f;
+}
+
+.card-title-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.header-fullscreen-btn {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 16px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 16px;
+  background: transparent !important;
+  transition: all 0.3s ease;
+}
+
+.header-fullscreen-btn:hover {
+  background: rgba(255, 77, 79, 0.1) !important;
+  transform: translateY(-2px);
+}
+
+.header-fullscreen-btn :deep(.anticon) {
+  font-size: 18px;
+  color: #ff4d4f;
+}
+
+.page-header {
+  padding: 8px 24px;
+  background: #1f1f1f;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.header-content h1 {
+  margin: 0;
+  font-size: 20px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.header-fullscreen-btn {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 4px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent !important;
+  transition: all 0.3s ease;
+}
+
+.header-fullscreen-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.header-fullscreen-btn :deep(.anticon) {
+  font-size: 18px;
+  color: #fff;
 }
 </style> 

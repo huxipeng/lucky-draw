@@ -4,8 +4,7 @@ import { punishmentPools, rewardPools, personRewardPoolMap } from '@/config/pool
 // 抽奖阶段枚举
 export const DRAW_STAGES = {
   PERSON: 'PERSON',
-  GIFT: 'GIFT',
-  COMPLETED: 'COMPLETED'
+  GIFT: 'GIFT'
 }
 
 export const useLuckyDrawStore = defineStore('luckyDraw', {
@@ -24,19 +23,19 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
     punishmentResults: [],
     currentRewardPool: null,
     rewardResult: null,
+    hasDrawnHiddenGift: false,
+    isFirstDraw: true,
+    isCompleted: false,
     
     // 历史记录
-    winners: [],
-    hasDrawnHiddenGift: false, // 是否已经抽取了隐藏礼包
-    isFirstDraw: true, // 是否是第一次抽取
+    winners: []
   }),
 
   getters: {
     currentStageText: (state) => {
       const stageMap = {
         [DRAW_STAGES.PERSON]: '抽取幸运观众',
-        [DRAW_STAGES.GIFT]: '抽取幸运奖品',
-        [DRAW_STAGES.COMPLETED]: '抽奖完成'
+        [DRAW_STAGES.GIFT]: '抽取幸运奖品'
       }
       return stageMap[state.currentStage]
     },
@@ -55,6 +54,7 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
     // 获取当前抽取按钮的文本
     drawButtonText: (state) => {
       if (state.isDrawing) return '停止'
+      if (state.isCompleted) return '重新开始'
       if (state.hasDrawnHiddenGift && state.hasHiddenGift) return '继续抽取'
       return '开始抽取'
     }
@@ -143,8 +143,8 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
         timestamp: new Date().getTime()
       })
       
-      // 完成抽取
-      this.currentStage = DRAW_STAGES.COMPLETED
+      // 标记完成
+      this.isCompleted = true
       return false // 返回 false 表示这是最终奖品抽取
     },
 
@@ -159,6 +159,7 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       this.isDrawing = false
       this.hasDrawnHiddenGift = false
       this.isFirstDraw = true
+      this.isCompleted = false
     },
 
     // 完全重置
