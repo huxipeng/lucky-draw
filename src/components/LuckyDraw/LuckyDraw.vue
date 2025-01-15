@@ -249,7 +249,7 @@ const handleDrawReward = () => {
     const reward = rewards[Math.floor(Math.random() * rewards.length)]
     store.addRewardResult(reward)
     currentRollingReward.value = ''
-    message.success(`恭喜获得: ${reward.name}`)
+  //  message.success(`恭喜获得: ${reward.name}`)
   }
 }
 
@@ -258,7 +258,7 @@ const handleReset = () => {
   currentRollingName.value = ''
   currentRollingGift.value = ''
   showHiddenGift.value = false
-  message.success('已重置当前抽奖')
+  // message.success('已重置当前抽奖')
 }
 
 // 滚动效果
@@ -378,11 +378,11 @@ const handleDrawGift = () => {
     currentRollingGift.value = ''
     
     if (hasHiddenGift) {
-      message.success('恭喜抽中隐藏礼包！')
+   //   message.success('恭喜抽中隐藏礼包！')
       showHiddenGift.value = true
     } else {
       if (store.currentStage === DRAW_STAGES.COMPLETED) {
-        message.success('礼包抽取完成！')
+      //  message.success('礼包抽取完成！')
         showHiddenGift.value = false
       }
     }

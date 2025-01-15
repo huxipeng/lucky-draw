@@ -56,7 +56,7 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       if (state.isDrawing) return '停止'
       if (state.isCompleted) return '抬走，有请下一位'
       if (state.hasDrawnHiddenGift && state.hasHiddenGift) return '继续抽取'
-      return '开始抽取'
+      return '抽取礼品'
     }
   },
 
