@@ -82,7 +82,7 @@ onMounted(() => {
   box-shadow: 0 4px 20px rgba(177, 30, 49, 0.4);
   position: relative;
   z-index: 1;
-  overflow: visible;
+  overflow: hidden;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -156,9 +156,10 @@ onMounted(() => {
 }
 
 .header-fullscreen-btn {
-  position: fixed;
+  position: absolute;
   right: 24px;
-  top: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 32px !important;
   height: 32px !important;
   border-radius: 4px !important;
