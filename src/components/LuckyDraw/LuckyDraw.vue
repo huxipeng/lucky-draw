@@ -242,13 +242,14 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   margin-bottom: 24px;
-  background: linear-gradient(135deg, #e6f7ff 0%, #f0f5ff 100%);
-  border-radius: 12px;
-  gap: 16px;
-  min-height: 200px;
-  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #fff5f5 0%, #fff1f0 100%);
+  border-radius: 16px;
+  gap: 24px;
+  min-height: 300px;
+  box-shadow: 0 10px 30px rgba(255, 77, 79, 0.1);
   position: relative;
   overflow: hidden;
+  border: 1px solid rgba(255, 77, 79, 0.1);
 }
 
 .rolling-box::before {
@@ -258,33 +259,69 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at center, transparent 0%, rgba(24, 144, 255, 0.1) 100%);
-  pointer-events: none;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(255, 77, 79, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 77, 79, 0.08) 0%, transparent 50%);
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+.rolling-box::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 0L60 40H40L50 0zM50 100L40 60H60L50 100zM100 50L60 60V40L100 50zM0 50L40 40V60L0 50z' fill='%23FF4D4F' fill-opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.5;
+  animation: rotateBg 30s linear infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes rotateBg {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .rolling-item, .selected-person {
-  font-size: 48px;
+  font-size: 64px;
   font-weight: bold;
-  background: linear-gradient(45deg, #1890ff, #69c0ff);
+  background: linear-gradient(45deg, #ff4d4f, #ff7875);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 2px 4px rgba(255, 77, 79, 0.1);
+  animation: textGlow 2s ease-in-out infinite;
+  z-index: 1;
+  letter-spacing: 4px;
 }
 
 .rolling-prize {
-  font-size: 36px;
+  font-size: 48px;
   font-weight: bold;
-  background: linear-gradient(45deg, #f5222d, #ff7875);
+  background: linear-gradient(45deg, #ff7875, #ffa39e);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 2px 4px rgba(255, 77, 79, 0.1);
+  animation: prizeGlow 2s ease-in-out infinite;
+  z-index: 1;
+  letter-spacing: 2px;
+}
+
+@keyframes textGlow {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 1; }
 }
 
 .hint-text {
-  font-size: 20px;
+  font-size: 24px;
   color: rgba(0, 0, 0, 0.45);
   text-align: center;
   padding: 0 24px;
+  z-index: 1;
 }
 
 .draw-info {
@@ -296,24 +333,46 @@ onUnmounted(() => {
   justify-content: space-around;
   color: rgba(0, 0, 0, 0.65);
   margin-bottom: 20px;
-  font-size: 14px;
-  background: #fafafa;
-  padding: 12px;
-  border-radius: 6px;
+  font-size: 15px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 16px;
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 77, 79, 0.1);
+  box-shadow: 0 2px 8px rgba(255, 77, 79, 0.05);
 }
 
 .action-buttons {
   display: flex;
-  gap: 16px;
+  gap: 20px;
   justify-content: center;
   align-items: center;
-  padding: 8px 0;
+  padding: 12px 0;
 }
 
 .action-buttons :deep(.ant-btn) {
-  min-width: 120px;
-  height: 40px;
-  border-radius: 6px;
+  min-width: 140px;
+  height: 46px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+}
+
+.action-buttons :deep(.ant-btn-primary) {
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  border: none;
+  box-shadow: 0 4px 15px rgba(255, 77, 79, 0.2);
+}
+
+.action-buttons :deep(.ant-btn-primary:hover) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 77, 79, 0.3);
+}
+
+.action-buttons :deep(.ant-btn-primary:active) {
+  transform: translateY(0);
 }
 
 .winners-area :deep(.ant-table) {
@@ -363,5 +422,23 @@ onUnmounted(() => {
 :deep(.ant-table) {
   flex: 1;
   overflow: auto;
+}
+
+.draw-area {
+  background: #fff;
+  border: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+:deep(.ant-card-head) {
+  background: #fff;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+:deep(.ant-card-head-title) {
+  color: rgba(0, 0, 0, 0.85);
+  font-size: 20px;
+  letter-spacing: 2px;
+  font-weight: 600;
 }
 </style> 
