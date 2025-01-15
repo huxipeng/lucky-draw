@@ -26,7 +26,9 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
     rewardResult: null,
     
     // 历史记录
-    winners: []
+    winners: [],
+    hasDrawnHiddenGift: false, // 是否已经抽取了隐藏礼包
+    isFirstDraw: true, // 是否是第一次抽取
   }),
 
   getters: {
@@ -48,6 +50,13 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
 
     hasHiddenGift: (state) => {
       return state.selectedPunishmentPools.length > 0
+    },
+
+    // 获取当前抽取按钮的文本
+    drawButtonText: (state) => {
+      if (state.isDrawing) return '停止'
+      if (state.hasDrawnHiddenGift && state.hasHiddenGift) return '继续抽取'
+      return '开始抽取'
     }
   },
 
@@ -103,23 +112,28 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
 
     // 修改抽取礼包的方法
     async drawGift() {
+      if (this.isFirstDraw) {
+        // 第一次抽取，只处理隐藏礼包
+        if (this.hasHiddenGift) {
+          this.punishmentResults = []  // 清空之前的结果
+          for (const pool of this.selectedPunishmentPools) {
+            const punishment = pool.items[Math.floor(Math.random() * pool.items.length)]
+            this.punishmentResults.push({
+              poolName: pool.name,
+              name: punishment.name,
+              id: punishment.id
+            })
+          }
+          this.hasDrawnHiddenGift = true
+          this.isFirstDraw = false
+          return true // 返回 true 表示抽中了隐藏礼包
+        }
+      }
+      
       // 抽取奖励
       const rewards = this.availablePrizes
       const reward = rewards[Math.floor(Math.random() * rewards.length)]
       this.rewardResult = reward
-
-      // 如果有惩罚池，抽取惩罚
-      if (this.hasHiddenGift) {
-        this.punishmentResults = []  // 清空之前的结果
-        for (const pool of this.selectedPunishmentPools) {
-          const punishment = pool.items[Math.floor(Math.random() * pool.items.length)]
-          this.punishmentResults.push({
-            poolName: pool.name,
-            name: punishment.name,
-            id: punishment.id
-          })
-        }
-      }
       
       // 添加到获奖记录
       this.winners.push({
@@ -131,6 +145,7 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       
       // 完成抽取
       this.currentStage = DRAW_STAGES.COMPLETED
+      return false // 返回 false 表示这是最终奖品抽取
     },
 
     // 重置当前抽奖
@@ -142,6 +157,8 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       this.rewardResult = null
       this.currentStage = DRAW_STAGES.PERSON
       this.isDrawing = false
+      this.hasDrawnHiddenGift = false
+      this.isFirstDraw = true
     },
 
     // 完全重置

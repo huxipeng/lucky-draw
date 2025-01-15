@@ -113,7 +113,7 @@
                   :loading="isDrawing"
                   size="large"
                 >
-                  {{ isDrawing ? '停止' : '抽取礼包' }}
+                  {{ store.drawButtonText }}
                 </a-button>
               </template>
               <a-button 
@@ -401,30 +401,25 @@ const handleDrawGift = () => {
   } else {
     store.stopDraw()
     stopRolling()
-    store.drawGift()
+    const hasHiddenGift = store.drawGift()
     currentRollingGift.value = ''
     
-    if (store.hasHiddenGift) {
+    if (hasHiddenGift) {
       message.success('恭喜抽中隐藏礼包！')
       showHiddenGift.value = true
-      // 3秒后自动完成
-      setTimeout(() => {
+    } else {
+      if (store.currentStage === DRAW_STAGES.COMPLETED) {
         message.success('礼包抽取完成！')
         showHiddenGift.value = false
-        store.currentStage = DRAW_STAGES.COMPLETED
-      }, 3000)
-    } else {
-      message.success('礼包抽取完成！')
-      store.currentStage = DRAW_STAGES.COMPLETED
+      }
     }
   }
 }
 
 const startRollingGift = () => {
-  const gifts = [
-    '神秘大奖', '幸运好礼', '惊喜礼品', '特别奖励',
-    '幸运之星', '节日祝福', '欢乐礼遇', '幸运礼物'
-  ]
+  const gifts = store.isFirstDraw
+    ? ['神秘礼包', '惊喜礼包', '隐藏礼包', '趣味礼包', '幸运礼包']
+    : ['神秘大奖', '幸运好礼', '惊喜礼品', '特别奖励', '幸运之星']
   
   let lastIndex = -1
   rollingTimer = setInterval(() => {
