@@ -1,8 +1,8 @@
 <template>
   <div class="lucky-draw">
-    <a-row :gutter="[16, 16]">
-      <!-- 抽奖区域 -->
-      <a-col :span="24">
+    <a-row :gutter="[16, 16]" class="draw-container">
+      <!-- 左侧抽奖区域 -->
+      <a-col :span="16">
         <a-card title="抽奖区域" class="draw-area">
           <div class="rolling-box" ref="rollingBox">
             <template v-if="!store.currentPerson">
@@ -41,6 +41,7 @@
                   :disabled="!canDrawPerson"
                   @click="toggleDrawPerson"
                   :loading="isDrawing"
+                  size="large"
                 >
                   {{ isDrawing ? '停止' : '开始抽人' }}
                 </a-button>
@@ -51,11 +52,12 @@
                   :disabled="!canDrawPrize"
                   @click="toggleDrawPrize"
                   :loading="isDrawing"
+                  size="large"
                 >
                   {{ isDrawing ? '停止' : '开始抽奖' }}
                 </a-button>
               </template>
-              <a-button @click="resetDraw" :disabled="isDrawing">
+              <a-button @click="resetDraw" :disabled="isDrawing" size="large">
                 重置
               </a-button>
             </div>
@@ -63,10 +65,15 @@
         </a-card>
       </a-col>
 
-      <!-- 中奖记录 -->
-      <a-col :span="24">
-        <a-card title="中奖记录">
-          <a-table :dataSource="winners" :columns="columns" />
+      <!-- 右侧中奖记录 -->
+      <a-col :span="8">
+        <a-card title="中奖记录" class="winners-area">
+          <a-table 
+            :dataSource="winners" 
+            :columns="columns" 
+            :pagination="{ pageSize: 10 }"
+            size="middle"
+          />
         </a-card>
       </a-col>
     </a-row>
@@ -99,21 +106,19 @@ const columns = [
     title: '姓名',
     dataIndex: ['winner', 'name'],
     key: 'name',
-  },
-  {
-    title: '工号',
-    dataIndex: ['winner', 'id'],
-    key: 'id',
+    align: 'center'
   },
   {
     title: '奖项',
     dataIndex: ['prize', 'name'],
     key: 'prize',
+    align: 'center'
   },
   {
     title: '中奖时间',
     dataIndex: 'timestamp',
     key: 'timestamp',
+    align: 'center',
     customRender: ({ text }) => new Date(text).toLocaleString(),
   },
 ]
@@ -214,52 +219,87 @@ onUnmounted(() => {
 
 <style scoped>
 .lucky-draw {
-  padding: 24px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-.draw-area {
-  text-align: center;
+.draw-container {
+  height: 100%;
+  flex: 1;
+}
+
+.draw-area, .winners-area {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .rolling-box {
-  height: 200px;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   margin-bottom: 24px;
-  background: #f0f2f5;
-  border-radius: 8px;
+  background: linear-gradient(135deg, #e6f7ff 0%, #f0f5ff 100%);
+  border-radius: 12px;
   gap: 16px;
+  min-height: 200px;
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.rolling-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, transparent 0%, rgba(24, 144, 255, 0.1) 100%);
+  pointer-events: none;
 }
 
 .rolling-item, .selected-person {
   font-size: 48px;
   font-weight: bold;
-  color: #1890ff;
+  background: linear-gradient(45deg, #1890ff, #69c0ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .rolling-prize {
   font-size: 36px;
   font-weight: bold;
-  color: #f5222d;
+  background: linear-gradient(45deg, #f5222d, #ff7875);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .hint-text {
-  font-size: 24px;
+  font-size: 20px;
   color: rgba(0, 0, 0, 0.45);
+  text-align: center;
+  padding: 0 24px;
 }
 
 .draw-info {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  margin-top: auto;
 }
 
 .info-row {
   display: flex;
   justify-content: space-around;
-  color: rgba(0, 0, 0, 0.45);
+  color: rgba(0, 0, 0, 0.65);
+  margin-bottom: 20px;
+  font-size: 14px;
+  background: #fafafa;
+  padding: 12px;
+  border-radius: 6px;
 }
 
 .action-buttons {
@@ -267,5 +307,61 @@ onUnmounted(() => {
   gap: 16px;
   justify-content: center;
   align-items: center;
+  padding: 8px 0;
+}
+
+.action-buttons :deep(.ant-btn) {
+  min-width: 120px;
+  height: 40px;
+  border-radius: 6px;
+}
+
+.winners-area :deep(.ant-table) {
+  background: transparent;
+}
+
+.winners-area :deep(.ant-table-thead > tr > th) {
+  background: #fafafa;
+  text-align: center;
+  font-weight: 500;
+}
+
+.winners-area :deep(.ant-table-tbody > tr > td) {
+  transition: background 0.3s;
+}
+
+.winners-area :deep(.ant-table-tbody > tr:hover > td) {
+  background: #e6f7ff;
+}
+
+:deep(.ant-card) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.ant-card-body) {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+}
+
+:deep(.ant-table-wrapper) {
+  height: 100%;
+}
+
+:deep(.ant-spin-nested-loading) {
+  height: 100%;
+}
+
+:deep(.ant-spin-container) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.ant-table) {
+  flex: 1;
+  overflow: auto;
 }
 </style> 
