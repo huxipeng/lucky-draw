@@ -112,6 +112,17 @@
       <!-- 右侧中奖记录 -->
       <a-col :span="8">
         <a-card title="中奖记录" class="winners-area">
+          <template #extra>
+            <a-button 
+              type="link"
+              :disabled="!store.winners.length"
+              @click="handleExport"
+              title="导出抽奖结果"
+            >
+              <template #icon><DownloadOutlined /></template>
+              导出结果
+            </a-button>
+          </template>
           <a-table 
             :dataSource="store.winners" 
             :columns="columns" 
@@ -147,10 +158,11 @@
 import { ref, computed, onUnmounted, onMounted } from 'vue'
 import { useLuckyDrawStore, DRAW_STAGES } from '@/stores/luckyDraw'
 import { message, Modal, Button, Input } from 'ant-design-vue'
-import { RedoOutlined } from '@ant-design/icons-vue'
+import { RedoOutlined, DownloadOutlined } from '@ant-design/icons-vue'
 import { participants } from '@/config/participants'
 import { SETTINGS } from '@/config/settings'
 import { getPersonRewardPool, getPersonPunishmentPool } from '@/config/pools'
+import * as XLSX from 'xlsx'
 
 const store = useLuckyDrawStore()
 
@@ -369,6 +381,45 @@ const handleResetConfirm = () => {
 const handleResetCancel = () => {
   resetModalVisible.value = false
   resetPassword.value = ''
+}
+
+// 导出Excel
+const handleExport = () => {
+  try {
+    // 准备导出数据
+    const exportData = store.winners.map(winner => ({
+      '姓名': winner.winner.name,
+      '奖品': winner.prize.name,
+      '趣味任务': winner.tasks.map(task => task.name).join('、') || '无',
+      '抽奖时间': new Date(winner.timestamp).toLocaleString()
+    }))
+
+    // 创建工作簿
+    const wb = XLSX.utils.book_new()
+    const ws = XLSX.utils.json_to_sheet(exportData)
+
+    // 设置列宽
+    const colWidths = [
+      { wch: 10 },  // 姓名
+      { wch: 20 },  // 奖品
+      { wch: 30 },  // 趣味任务
+      { wch: 20 }   // 抽奖时间
+    ]
+    ws['!cols'] = colWidths
+
+    // 添加工作表到工作簿
+    XLSX.utils.book_append_sheet(wb, ws, '抽奖结果')
+
+    // 生成文件名
+    const fileName = `抽奖结果_${new Date().toLocaleDateString()}.xlsx`
+
+    // 导出文件
+    XLSX.writeFile(wb, fileName)
+    message.success('导出成功！')
+  } catch (error) {
+    console.error('导出失败:', error)
+    message.error('导出失败，请重试')
+  }
 }
 
 // 组件挂载时导入参与者名单
