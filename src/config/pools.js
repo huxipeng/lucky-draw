@@ -63,53 +63,45 @@ export const specialPunishmentPools = [
   }
 ]
 
-// 奖励池配置
-export const rewardPools = [
-  {
-    id: 1,
-    name: '奖励池A',
-    items: [
-      { id: 'r1-1', name: '小米破壁机', count: 2 },
-      { id: 'r1-2', name: '机械日历', count: 3 },
-      { id: 'r1-3', name: '户外茶具包', count: 3 },
-      { id: 'r1-4', name: '除螨仪', count: 3 },
-      { id: 'r1-5', name: '壁炉香薰加湿器', count: 3 },
-      { id: 'r1-6', name: '复古蓝牙音箱', count: 2 },
-      { id: 'r1-7', name: '车载吸尘器', count: 4 },
-      { id: 'r1-8', name: '香薰蜡烛', count: 6 },
-      { id: 'r1-9', name: '蛇年商务礼盒', count: 7 },
-      { id: 'r1-10', name: '小天鹅迷你洗衣机', count: 6 },
-      { id: 'r1-11', name: '超声波清洗机', count: 2 },
-      { id: 'r1-12', name: '无线鼠标', count: 4 },
-      { id: 'r1-13', name: '机械键盘', count: 3 },
-      { id: 'r1-14', name: '移动硬盘', count: 3 }
-    ]
-  },
+// 默认奖励池配置
+export const defaultRewardPool = {
+  id: 1,
+  name: '奖励池A',
+  items: [
+    { id: 'r1-1', name: '小米破壁机', count: 2 },
+    { id: 'r1-2', name: '机械日历', count: 3 },
+    { id: 'r1-3', name: '户外茶具包', count: 3 },
+    { id: 'r1-4', name: '除螨仪', count: 3 },
+    { id: 'r1-5', name: '壁炉香薰加湿器', count: 3 },
+    { id: 'r1-6', name: '复古蓝牙音箱', count: 2 },
+    { id: 'r1-7', name: '车载吸尘器', count: 4 },
+    { id: 'r1-8', name: '香薰蜡烛', count: 6 },
+    { id: 'r1-9', name: '蛇年商务礼盒', count: 7 },
+    { id: 'r1-10', name: '小天鹅迷你洗衣机', count: 6 },
+    { id: 'r1-11', name: '超声波清洗机', count: 2 },
+    { id: 'r1-12', name: '无线鼠标', count: 4 },
+    { id: 'r1-13', name: '机械键盘', count: 3 },
+    { id: 'r1-14', name: '移动硬盘', count: 3 }
+  ]
+}
+
+// 特殊奖励池配置
+export const specialRewardPools = [
   {
     id: 2,
     name: '奖励池B',
+    participants: [
+      '李梦秋', '杨佳雪', '徐振栋', '周禹豪', '陈兴',
+      '于魁星', '周峰', '罗向利', '赵碧峰', '姜凯鑫',
+      '徐德禄', '刘伟', '毛宏振', '刘丽丽', '虞秀芳',
+      '孔庆友', '王学凡', '任勇', '张玲峰', '宁飞',
+      '周科', '梁世辉', '栾兴华'
+    ],
     items: [
       { id: 'r1-15', name: '小米破壁机', count: 1 }
     ]
   }
 ]
-
-// 人员奖励池映射关系
-export const personRewardPoolMap = {
-  // 前22人对应奖励池A
-  '奚泳利': 1, '黄建清': 1, '李存考': 1, '黄建平': 1, '胡希鹏': 1,
-  '沈晓伟': 1, '冯旭阳': 1, '傅宇成': 1, '杨梦': 1, '余燕双': 1,
-  '任道艳': 1, '夏欢欢': 1, '姚杰': 1, '李茜茜': 1, '华云芳': 1,
-  '郑华': 1, '王伟龙': 1, '朱宏林': 1, '余凯宁': 1, '雷锦': 1,
-  '吴丽亮': 1, '韩建锋': 1,
-  
-  // 后23人对应奖励池B
-  '李梦秋': 2, '杨佳雪': 2, '徐振栋': 2, '周禹豪': 2, '陈兴': 2,
-  '于魁星': 2, '周峰': 2, '罗向利': 2, '赵碧峰': 2, '姜凯鑫': 2,
-  '徐德禄': 2, '刘伟': 2, '毛宏振': 2, '刘丽丽': 2, '虞秀芳': 2,
-  '孔庆友': 2, '王学凡': 2, '任勇': 2, '张玲峰': 2, '宁飞': 2,
-  '周科': 2, '梁世辉': 2, '栾兴华': 2
-}
 
 // 工具函数：根据概率数组随机选择一个数量
 export function getRandomCountByProbability(probabilities) {
@@ -136,4 +128,15 @@ export function getPersonPunishmentPool(personName) {
   
   // 如果找到特殊池，返回特殊池，否则返回默认池
   return specialPool || defaultPunishmentPool
+}
+
+// 工具函数：获取人员对应的奖励池
+export function getPersonRewardPool(personName) {
+  // 查找人员是否在特殊奖励池中
+  const specialPool = specialRewardPools.find(pool => 
+    pool.participants.includes(personName)
+  )
+  
+  // 如果找到特殊池，返回特殊池，否则返回默认池
+  return specialPool || defaultRewardPool
 } 
