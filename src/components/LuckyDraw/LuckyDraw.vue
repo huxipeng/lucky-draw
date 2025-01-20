@@ -124,7 +124,7 @@
 
     <!-- 重置密码验证对话框 -->
     <a-modal
-      v-model:visible="resetModalVisible"
+      v-model:open="resetModalVisible"
       title="重置抽奖"
       :confirm-loading="resetConfirmLoading"
       @ok="handleResetConfirm"
@@ -150,6 +150,7 @@ import { message, Modal, Button, Input } from 'ant-design-vue'
 import { RedoOutlined } from '@ant-design/icons-vue'
 import { participants } from '@/config/participants'
 import { SETTINGS } from '@/config/settings'
+import { getPersonRewardPool } from '@/config/pools'
 
 const store = useLuckyDrawStore()
 
@@ -178,7 +179,14 @@ const canDrawPerson = computed(() => store.availableParticipants.length > 0)
 const drawButtonText = computed(() => {
   if (isDrawing.value) return '停止'
   if (isCompleted.value) {
-    if (store.availablePrizes.length === 0) return '奖池已经被抢光了'
+    // 检查当前抽奖人的可用奖品
+    if (currentPerson.value) {
+      const availablePrizes = getPersonRewardPool(currentPerson.value.name).items.filter(item => {
+        const remainingCount = store.rewardInventory.get(item.id) ?? 0
+        return remainingCount > 0
+      })
+      // if (availablePrizes.length === 0) return '奖池已经被抢光了'
+    }
     return '抬走，有请下一位'
   }
   if (punishmentResults.value.length > 0) return '继续抽取'
@@ -229,7 +237,12 @@ const handleDrawPerson = () => {
 
 const handleDrawGift = () => {
   // 检查是否还有可用奖品
-  if (!isDrawing.value && store.availablePrizes.length === 0) {
+  const availablePrizes = getPersonRewardPool(currentPerson.value.name).items.filter(item => {
+    const remainingCount = store.rewardInventory.get(item.id) ?? 0
+    return remainingCount > 0
+  })
+
+  if (!isDrawing.value && availablePrizes.length === 0) {
     message.warning('奖池已经被抢光了')
     return
   }
@@ -249,6 +262,7 @@ const handleDrawGift = () => {
 }
 
 const handleReset = () => {
+  // 重置组件状态
   currentPerson.value = null
   currentStage.value = 'PERSON'
   currentRollingName.value = ''
@@ -257,6 +271,11 @@ const handleReset = () => {
   rewardResult.value = null
   isCompleted.value = false
   isDrawing.value = false
+
+  // 如果没有更多可抽奖的人，重新导入参与者名单并重置奖品库存
+  if (store.availableParticipants.length === 0) {
+    store.importParticipants(participants, true)
+  }
 }
 
 // 滚动效果

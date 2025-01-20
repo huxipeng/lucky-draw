@@ -70,24 +70,11 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
     }
   },
 
-  getters: {
-    availablePrizes: (state) => {
-      const currentPerson = state.winners[state.winners.length - 1]?.winner
-      if (!currentPerson) return []
-      
-      const currentRewardPool = getPersonRewardPool(currentPerson.name)
-      return currentRewardPool.items.filter(item => {
-        const remainingCount = state.rewardInventory.get(item.id) ?? 0
-        return remainingCount > 0
-      })
-    }
-  },
-
   actions: {
     // 导入参与者
-    importParticipants(participants) {
-      // 如果已经有存储的状态，就不重新初始化
-      if (this.participants.length > 0) return
+    importParticipants(participants, forceReset = false) {
+      // 如果已经有存储的状态且不是强制重置，就不重新初始化
+      if (!forceReset && this.participants && this.participants.length > 0) return
 
       this.participants = participants
       this.resetAvailableParticipants()
@@ -99,10 +86,7 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
 
     // 初始化奖品库存
     initializeInventory() {
-      // 如果已经有库存数据，就不重新初始化
-      if (this.rewardInventory.size > 0) return
-
-      this.rewardInventory.clear()
+      this.rewardInventory = new Map()
       // 初始化默认奖励池的库存
       defaultRewardPool.items.forEach(item => {
         this.rewardInventory.set(item.id, item.count)

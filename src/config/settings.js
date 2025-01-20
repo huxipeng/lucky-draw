@@ -1,7 +1,7 @@
 // 系统配置
 export const SETTINGS = {
   // 管理密码
-  ADMIN_PASSWORD: 'admin123',
+  ADMIN_PASSWORD: 'asiainfo',
   
   // 抽奖配置
   DRAW: {
