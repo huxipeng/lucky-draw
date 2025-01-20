@@ -69,20 +69,20 @@ export const rewardPools = [
     id: 1,
     name: '奖励池A',
     items: [
-      { id: 'r1-1', name: '精美保温杯' },
-      { id: 'r1-2', name: '无线充电器' },
-      { id: 'r1-3', name: '蓝牙耳机' },
-      { id: 'r1-4', name: '机械键盘' }
+      { id: 'r1-1', name: '精美保温杯', count: 3 },
+      { id: 'r1-2', name: '无线充电器', count: 2 },
+      { id: 'r1-3', name: '蓝牙耳机', count: 2 },
+      { id: 'r1-4', name: '机械键盘', count: 1 }
     ]
   },
   {
     id: 2,
     name: '奖励池B',
     items: [
-      { id: 'r2-1', name: '电影票两张' },
-      { id: 'r2-2', name: '午餐券' },
-      { id: 'r2-3', name: '咖啡券' },
-      { id: 'r2-4', name: '水果券' }
+      { id: 'r2-1', name: '电影票两张', count: 6 },
+      { id: 'r2-2', name: '午餐券', count: 6 },
+      { id: 'r2-3', name: '咖啡券', count: 6 },
+      { id: 'r2-4', name: '水果券', count: 5 }
     ]
   }
 ]

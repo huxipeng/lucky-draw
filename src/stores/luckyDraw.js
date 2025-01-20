@@ -25,13 +25,16 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
     currentPerson: null,
     
     // 惩罚和奖励相关状态
-    currentPunishmentPool: null, // 当前使用的惩罚池
-    punishmentResults: [], // 抽中的惩罚结果
+    currentPunishmentPool: null,
+    punishmentResults: [],
     currentRewardPool: null,
     rewardResult: null,
     hasDrawnHiddenGift: false,
     isFirstDraw: true,
     isCompleted: false,
+    
+    // 奖品库存状态
+    rewardInventory: new Map(), // 用于跟踪奖品剩余数量
     
     // 历史记录
     winners: []
@@ -49,9 +52,10 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
     
     availablePrizes: (state) => {
       if (!state.currentRewardPool) return []
-      return state.currentRewardPool.items.filter(item => 
-        !state.winners.some(w => w.prize.id === item.id)
-      )
+      return state.currentRewardPool.items.filter(item => {
+        const remainingCount = state.rewardInventory.get(item.id) ?? 0
+        return remainingCount > 0 && !state.winners.some(w => w.prize.id === item.id)
+      })
     },
 
     // 获取当前抽取按钮的文本
@@ -59,6 +63,7 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       if (state.isDrawing) return '停止'
       if (state.isCompleted) return '抬走，有请下一位'
       if (state.hasDrawnHiddenGift && state.punishmentResults.length > 0) return '继续抽取'
+      if (state.availablePrizes.length === 0) return '奖池已经被抢光了'
       return '抽取礼品'
     }
   },
@@ -68,6 +73,17 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
     importParticipants(participants) {
       this.participants = participants
       this.resetAvailableParticipants()
+      this.initializeInventory()
+    },
+
+    // 初始化奖品库存
+    initializeInventory() {
+      this.rewardInventory.clear()
+      rewardPools.forEach(pool => {
+        pool.items.forEach(item => {
+          this.rewardInventory.set(item.id, item.count)
+        })
+      })
     },
 
     // 重置可用参与者
@@ -135,10 +151,23 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
         this.isFirstDraw = false
       }
       
+      // 检查是否还有可用奖品
+      const availablePrizes = this.availablePrizes
+      if (availablePrizes.length === 0) {
+        this.isCompleted = true
+        this.currentStage = DRAW_STAGES.COMPLETED
+        return false
+      }
+      
       // 抽取奖励
-      const rewards = this.availablePrizes
-      const reward = rewards[Math.floor(Math.random() * rewards.length)]
+      const reward = availablePrizes[Math.floor(Math.random() * availablePrizes.length)]
       this.rewardResult = reward
+      
+      // 更新库存
+      const remainingCount = this.rewardInventory.get(reward.id) ?? 0
+      if (remainingCount > 0) {
+        this.rewardInventory.set(reward.id, remainingCount - 1)
+      }
       
       // 添加到获奖记录
       this.winners.push({
@@ -173,6 +202,7 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       this.resetCurrent()
       this.winners = []
       this.resetAvailableParticipants()
+      this.initializeInventory()
       this.isCompleted = false
       this.currentStage = DRAW_STAGES.PERSON
     }
