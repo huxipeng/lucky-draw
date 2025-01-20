@@ -7,6 +7,44 @@ import {
   getRandomCountByProbability
 } from '@/config/pools'
 
+const STORAGE_KEY = 'lucky-draw-state'
+const STORAGE_VERSION = '1.0'
+
+// 保存状态到 localStorage
+const saveState = (state) => {
+  const data = {
+    version: STORAGE_VERSION,
+    winners: state.winners,
+    availableParticipants: state.availableParticipants,
+    rewardInventory: Array.from(state.rewardInventory.entries()),
+    timestamp: new Date().getTime()
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+}
+
+// 从 localStorage 读取状态
+const loadState = () => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (!saved) return null
+
+    const data = JSON.parse(saved)
+    if (data.version !== STORAGE_VERSION) {
+      console.warn('存储的数据版本不匹配，将使用默认数据')
+      return null
+    }
+
+    return {
+      winners: data.winners,
+      availableParticipants: data.availableParticipants,
+      rewardInventory: new Map(data.rewardInventory)
+    }
+  } catch (error) {
+    console.error('读取存储数据失败:', error)
+    return null
+  }
+}
+
 // 抽奖阶段枚举
 export const DRAW_STAGES = {
   PERSON: 'PERSON',
@@ -15,17 +53,22 @@ export const DRAW_STAGES = {
 }
 
 export const useLuckyDrawStore = defineStore('luckyDraw', {
-  state: () => ({
-    // 基础数据
-    participants: [],
-    availableParticipants: [],
+  state: () => {
+    // 尝试从 localStorage 读取状态
+    const savedState = loadState()
     
-    // 奖品库存状态
-    rewardInventory: new Map(), // 用于跟踪奖品剩余数量
-    
-    // 获奖记录
-    winners: []
-  }),
+    return savedState || {
+      // 基础数据
+      participants: [],
+      availableParticipants: [],
+      
+      // 奖品库存状态
+      rewardInventory: new Map(),
+      
+      // 获奖记录
+      winners: []
+    }
+  },
 
   getters: {
     availablePrizes: (state) => {
@@ -43,13 +86,22 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
   actions: {
     // 导入参与者
     importParticipants(participants) {
+      // 如果已经有存储的状态，就不重新初始化
+      if (this.participants.length > 0) return
+
       this.participants = participants
       this.resetAvailableParticipants()
       this.initializeInventory()
+      
+      // 保存初始状态
+      saveState(this.$state)
     },
 
     // 初始化奖品库存
     initializeInventory() {
+      // 如果已经有库存数据，就不重新初始化
+      if (this.rewardInventory.size > 0) return
+
       this.rewardInventory.clear()
       // 初始化默认奖励池的库存
       defaultRewardPool.items.forEach(item => {
@@ -61,17 +113,25 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
           this.rewardInventory.set(item.id, item.count)
         })
       })
+      
+      // 保存状态
+      saveState(this.$state)
     },
 
     // 重置可用参与者
     resetAvailableParticipants() {
       this.availableParticipants = [...this.participants]
+      saveState(this.$state)
     },
 
     // 抽取参与者
     drawPerson() {
       const person = this.availableParticipants[Math.floor(Math.random() * this.availableParticipants.length)]
       this.availableParticipants = this.availableParticipants.filter(p => p.id !== person.id)
+      
+      // 保存状态
+      saveState(this.$state)
+      
       return person
     },
 
@@ -124,6 +184,9 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
         timestamp: new Date().getTime()
       })
       
+      // 保存状态
+      saveState(this.$state)
+      
       return { punishmentResults, reward }
     },
 
@@ -132,6 +195,15 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       this.winners = []
       this.resetAvailableParticipants()
       this.initializeInventory()
+      
+      // 保存状态
+      saveState(this.$state)
+    },
+
+    // 清除存储的状态
+    clearStorage() {
+      localStorage.removeItem(STORAGE_KEY)
+      this.reset()
     }
   }
 }) 

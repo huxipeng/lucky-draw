@@ -7,9 +7,19 @@
           <template #title>
             <div class="card-title-wrapper">
               <span class="title-text">幸运抽奖</span>
-              <span class="remaining-count">
-                待抽奖 <span class="count-number">{{ store.availableParticipants.length }}</span> 人
-              </span>
+              <div class="title-actions">
+                <span class="remaining-count">
+                  待抽奖 <span class="count-number">{{ store.availableParticipants.length }}</span> 人
+                </span>
+                <a-button 
+                  type="text" 
+                  danger
+                  class="reset-button"
+                  @click="showResetConfirm"
+                >
+                  重置抽奖
+                </a-button>
+              </div>
             </div>
           </template>
 
@@ -111,14 +121,35 @@
         </a-card>
       </a-col>
     </a-row>
+
+    <!-- 重置密码验证对话框 -->
+    <a-modal
+      v-model:visible="resetModalVisible"
+      title="重置抽奖"
+      :confirm-loading="resetConfirmLoading"
+      @ok="handleResetConfirm"
+      @cancel="handleResetCancel"
+    >
+      <p>请输入管理密码以确认重置操作：</p>
+      <a-input-password
+        v-model:value="resetPassword"
+        placeholder="请输入管理密码"
+        @keyup.enter="handleResetConfirm"
+      />
+      <p style="margin-top: 16px; color: #ff4d4f;">
+        注意：重置后将清空所有抽奖记录，并重置奖品数量和参与人员名单！
+      </p>
+    </a-modal>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onUnmounted, onMounted } from 'vue'
 import { useLuckyDrawStore } from '@/stores/luckyDraw'
-import { message } from 'ant-design-vue'
+import { message, Modal, Button, Input } from 'ant-design-vue'
+import { RedoOutlined } from '@ant-design/icons-vue'
 import { participants } from '@/config/participants'
+import { SETTINGS } from '@/config/settings'
 
 const store = useLuckyDrawStore()
 
@@ -136,6 +167,11 @@ const currentRollingGift = ref('')
 const punishmentResults = ref([])
 const rewardResult = ref(null)
 const isCompleted = ref(false)
+
+// 重置相关的状态
+const resetModalVisible = ref(false)
+const resetPassword = ref('')
+const resetConfirmLoading = ref(false)
 
 // 计算属性
 const canDrawPerson = computed(() => store.availableParticipants.length > 0)
@@ -278,6 +314,45 @@ const stopRolling = () => {
     clearTimeout(autoStopTimer)
     autoStopTimer = null
   }
+}
+
+// 显示重置确认对话框
+const showResetConfirm = () => {
+  console.log('showResetConfirm')
+  resetModalVisible.value = true
+  resetPassword.value = ''
+}
+
+// 处理重置确认
+const handleResetConfirm = () => {
+  if (resetPassword.value !== SETTINGS.ADMIN_PASSWORD) {
+    message.error('管理密码错误')
+    return
+  }
+
+  resetConfirmLoading.value = true
+  
+  // 延迟一下以显示loading效果
+  setTimeout(() => {
+    try {
+      store.clearStorage()
+      message.success('重置成功')
+      resetModalVisible.value = false
+      // 重置后刷新页面以重新加载数据
+      window.location.reload()
+    } catch (error) {
+      message.error('重置失败')
+    } finally {
+      resetConfirmLoading.value = false
+      resetPassword.value = ''
+    }
+  }, 500)
+}
+
+// 处理取消重置
+const handleResetCancel = () => {
+  resetModalVisible.value = false
+  resetPassword.value = ''
 }
 
 // 组件挂载时导入参与者名单
@@ -992,27 +1067,27 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
-.header-fullscreen-btn {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 4px !important;
+.title-actions {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: transparent !important;
+  gap: 16px;
+}
+
+.reset-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 4px;
   transition: all 0.3s ease;
 }
 
-.header-fullscreen-btn:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
+.reset-button:hover {
+  background: rgba(255, 77, 79, 0.1);
 }
 
-.header-fullscreen-btn :deep(.anticon) {
-  font-size: 18px;
-  color: #fff;
+.reset-button :deep(.anticon) {
+  font-size: 14px;
 }
 </style> 
