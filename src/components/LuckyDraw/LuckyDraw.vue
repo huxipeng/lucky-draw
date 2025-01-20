@@ -49,7 +49,7 @@
                   恭喜 {{ currentPerson?.name }}
                 </div>
                 <div class="rolling-gift" v-if="isDrawing">
-                  {{ currentRollingTask }}
+                  {{ currentRollingGift }}
                 </div>
                 <template v-else>
                   <!-- 显示惩罚任务 -->
@@ -244,13 +244,20 @@ const columns = [
 // 开始滚动奖品名称（统一的滚动效果）
 const startRollingPrize = () => {
   const allPrizes = store.allPrizes
+  let lastIndex = -1
   
   rollingTimer = setInterval(() => {
-    const randomPrize = allPrizes[Math.floor(Math.random() * allPrizes.length)]
-    currentRollingGift.value = randomPrize
+    let randomIndex
+    do {
+      randomIndex = Math.floor(Math.random() * allPrizes.length)
+    } while (randomIndex === lastIndex && allPrizes.length > 1)
+    
+    lastIndex = randomIndex
+    currentRollingGift.value = allPrizes[randomIndex]
   }, 50)
 
   // 自动停止
+  const randomDuration = 3000 + Math.random() * 2000
   autoStopTimer = setTimeout(() => {
     if (isDrawing.value) {
       // 根据当前阶段调用不同的处理函数
@@ -260,7 +267,7 @@ const startRollingPrize = () => {
         handleDrawGift()
       }
     }
-  }, 3000)
+  }, randomDuration)
 }
 
 // 抽奖方法
@@ -300,6 +307,7 @@ const handleDrawPunishment = () => {
     // 获取惩罚任务
     const results = store.drawPunishment()
     punishmentResults.value = results
+    currentRollingGift.value = ''  // 清空滚动显示
     
     // 如果没有抽到任务（results长度为0），直接进入抽奖品阶段
     if (!results || results.length === 0) {
@@ -338,6 +346,7 @@ const handleDrawGift = () => {
     stopRolling()
     // 获取奖品
     const reward = store.drawGift()
+    currentRollingGift.value = ''  // 清空滚动显示
     if (reward) {
       rewardResult.value = reward
       isCompleted.value = true
@@ -350,7 +359,6 @@ const handleReset = () => {
   currentStage.value = DRAW_STAGES.PERSON
   currentPerson.value = null
   currentRollingName.value = ''
-  currentRollingTask.value = ''
   currentRollingGift.value = ''
   punishmentResults.value = []
   rewardResult.value = null
