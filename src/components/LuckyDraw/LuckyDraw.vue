@@ -6,7 +6,10 @@
         <a-card class="draw-area">
           <template #title>
             <div class="card-title-wrapper">
-              <span>幸运抽奖</span>
+              <span class="title-text">幸运抽奖</span>
+              <span class="remaining-count">
+                待抽奖 <span class="count-number">{{ store.availableParticipants.length }}</span> 人
+              </span>
             </div>
           </template>
 
@@ -92,14 +95,6 @@
 
           <!-- 控制按钮区域 -->
           <div class="control-area">
-            <div class="info-row">
-              <span class="participant-info">
-                待抽奖人数: {{ store.availableParticipants.length }}
-              </span>
-              <span class="stage-info">
-                当前阶段: {{ store.currentStageText }}
-              </span>
-            </div>
             <div class="action-buttons">
               <template v-if="currentStage === DRAW_STAGES.PERSON">
                 <a-button
@@ -927,26 +922,46 @@ onUnmounted(() => {
   width: 100%;
 }
 
+.title-text {
+  font-size: 20px;
+  color: rgba(0, 0, 0, 0.85);
+  font-weight: 500;
+}
+
+.remaining-count {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.count-number {
+  font-size: 16px;
+  color: #ff4d4f;
+  font-weight: 600;
+  margin: 0 4px;
+}
+
 .header-fullscreen-btn {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 32px !important;
   height: 32px !important;
-  border-radius: 16px !important;
+  border-radius: 4px !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 16px;
   background: transparent !important;
   transition: all 0.3s ease;
 }
 
 .header-fullscreen-btn:hover {
-  background: rgba(255, 77, 79, 0.1) !important;
-  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.1) !important;
 }
 
 .header-fullscreen-btn :deep(.anticon) {
   font-size: 18px;
-  color: #ff4d4f;
+  color: #fff;
 }
 
 .page-header {
