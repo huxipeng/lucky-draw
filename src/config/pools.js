@@ -69,20 +69,27 @@ export const rewardPools = [
     id: 1,
     name: '奖励池A',
     items: [
-      { id: 'r1-1', name: '精美保温杯', count: 3 },
-      { id: 'r1-2', name: '无线充电器', count: 2 },
-      { id: 'r1-3', name: '蓝牙耳机', count: 2 },
-      { id: 'r1-4', name: '机械键盘', count: 1 }
+      { id: 'r1-1', name: '小米破壁机', count: 2 },
+      { id: 'r1-2', name: '机械日历', count: 3 },
+      { id: 'r1-3', name: '户外茶具包', count: 3 },
+      { id: 'r1-4', name: '除螨仪', count: 3 },
+      { id: 'r1-5', name: '壁炉香薰加湿器', count: 3 },
+      { id: 'r1-6', name: '复古蓝牙音箱', count: 2 },
+      { id: 'r1-7', name: '车载吸尘器', count: 4 },
+      { id: 'r1-8', name: '香薰蜡烛', count: 6 },
+      { id: 'r1-9', name: '蛇年商务礼盒', count: 7 },
+      { id: 'r1-10', name: '小天鹅迷你洗衣机', count: 6 },
+      { id: 'r1-11', name: '超声波清洗机', count: 2 },
+      { id: 'r1-12', name: '无线鼠标', count: 4 },
+      { id: 'r1-13', name: '机械键盘', count: 3 },
+      { id: 'r1-14', name: '移动硬盘', count: 3 }
     ]
   },
   {
     id: 2,
     name: '奖励池B',
     items: [
-      { id: 'r2-1', name: '电影票两张', count: 6 },
-      { id: 'r2-2', name: '午餐券', count: 6 },
-      { id: 'r2-3', name: '咖啡券', count: 6 },
-      { id: 'r2-4', name: '水果券', count: 5 }
+      { id: 'r1-15', name: '小米破壁机', count: 1 }
     ]
   }
 ]
