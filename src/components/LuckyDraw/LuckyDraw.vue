@@ -48,11 +48,13 @@
                       </div>
                     </div>
                   </div>
-                  <!-- 显示隐藏礼包 -->
-                  <div v-if="showHiddenGift" class="hidden-gift-reveal">
-                    <div class="reveal-title" v-if="!store.isCompleted">🎉 恭喜抽中隐藏礼包！</div>
+                  <!-- 显示惩罚任务 -->
+                  <div v-if="store.punishmentResults.length > 0" class="hidden-gift-reveal">
+                    <div class="reveal-title" v-if="!store.isCompleted">
+                      🎉 恭喜抽中 {{ store.currentPunishmentPool?.name }} 任务！
+                    </div>
                     <div class="tasks-preview">
-                      <div class="list-title">隐藏礼包</div>
+                      <div class="list-title">任务列表</div>
                       <div class="tasks-grid">
                         <div v-for="(task, index) in store.punishmentResults" :key="index" class="task-item">
                           {{ task.name }}
@@ -152,15 +154,10 @@ const currentStage = computed(() => store.currentStage)
 // 状态
 const currentRollingName = ref('')
 const currentRollingGift = ref('')
-const currentRollingPunishment = ref('')
-const currentRollingReward = ref('')
-const currentRollingTask = ref('')
-const currentRollingPrize = ref('')
 let rollingTimer = null
 let autoStopTimer = null
 const highlightName = ref('')
 let highlightTimer = null
-const showHiddenGift = ref(false)
 
 // 计算属性
 const canDrawPerson = computed(() => store.availableParticipants.length > 0)
@@ -207,39 +204,16 @@ const handleDrawPerson = () => {
   }
 }
 
-const handleDrawPunishment = () => {
+const handleDrawGift = () => {
   if (!isDrawing.value) {
-    // 开始抽惩罚
     store.startDraw()
-    startRollingPunishment()
+    startRollingGift()
   } else {
-    // 停止抽惩罚
     store.stopDraw()
     stopRolling()
-    // 从当前惩罚池中选择
-    const pool = store.currentPunishmentPool
-    const punishment = pool.items[Math.floor(Math.random() * pool.items.length)]
-    store.addPunishmentResult(punishment)
-    currentRollingPunishment.value = ''
-    message.success(`抽中惩罚: ${punishment.name}`)
-  }
-}
-
-const handleDrawReward = () => {
-  if (!isDrawing.value) {
-    // 开始抽奖励
-    store.startDraw()
-    startRollingReward()
-  } else {
-    // 停止抽奖励
-    store.stopDraw()
-    stopRolling()
-    // 从奖励池中选择
-    const rewards = store.availablePrizes
-    const reward = rewards[Math.floor(Math.random() * rewards.length)]
-    store.addRewardResult(reward)
-    currentRollingReward.value = ''
-  //  message.success(`恭喜获得: ${reward.name}`)
+    store.drawGift().then(hasHiddenGift => {
+      currentRollingGift.value = ''
+    })
   }
 }
 
@@ -247,8 +221,6 @@ const handleReset = () => {
   store.resetCurrent()
   currentRollingName.value = ''
   currentRollingGift.value = ''
-  showHiddenGift.value = false
-  // message.success('已重置当前抽奖')
 }
 
 // 滚动效果
@@ -273,107 +245,6 @@ const startRollingName = () => {
   }, randomDuration)
 }
 
-const startRollingPunishment = () => {
-  const pool = store.currentPunishmentPool
-  let lastIndex = -1
-  rollingTimer = setInterval(() => {
-    let randomIndex
-    do {
-      randomIndex = Math.floor(Math.random() * pool.items.length)
-    } while (randomIndex === lastIndex && pool.items.length > 1)
-    
-    lastIndex = randomIndex
-    currentRollingPunishment.value = pool.items[randomIndex].name
-  }, 100)
-
-  const randomDuration = 3000 + Math.random() * 2000
-  autoStopTimer = setTimeout(() => {
-    if (isDrawing.value) {
-      handleDrawPunishment()
-    }
-  }, randomDuration)
-}
-
-const startRollingReward = () => {
-  let lastIndex = -1
-  rollingTimer = setInterval(() => {
-    const rewards = store.availablePrizes
-    let randomIndex
-    do {
-      randomIndex = Math.floor(Math.random() * rewards.length)
-    } while (randomIndex === lastIndex && rewards.length > 1)
-    
-    lastIndex = randomIndex
-    currentRollingReward.value = rewards[randomIndex].name
-  }, 100)
-
-  const randomDuration = 3000 + Math.random() * 2000
-  autoStopTimer = setTimeout(() => {
-    if (isDrawing.value) {
-      handleDrawReward()
-    }
-  }, randomDuration)
-}
-
-const stopRolling = () => {
-  if (rollingTimer) {
-    clearInterval(rollingTimer)
-    rollingTimer = null
-  }
-  if (autoStopTimer) {
-    clearTimeout(autoStopTimer)
-    autoStopTimer = null
-  }
-}
-
-const startDraw = () => {
-  isDrawing.value = true
-  startHighlight()
-}
-
-const startHighlight = () => {
-  if (highlightTimer) {
-    clearInterval(highlightTimer)
-  }
-  
-  highlightTimer = setInterval(() => {
-    const randomIndex = Math.floor(Math.random() * participants.value.length)
-    highlightName.value = participants.value[randomIndex].name
-  }, 100)
-}
-
-const stopDraw = () => {
-  if (highlightTimer) {
-    clearInterval(highlightTimer)
-    highlightTimer = null
-  }
-  isDrawing.value = false
-  highlightName.value = ''
-  // 其他停止逻辑...
-}
-
-const handleDrawGift = () => {
-  if (!isDrawing.value) {
-    store.startDraw()
-    startRollingGift()
-  } else {
-    store.stopDraw()
-    stopRolling()
-    const hasHiddenGift = store.drawGift()
-    currentRollingGift.value = ''
-    
-    if (hasHiddenGift) {
-   //   message.success('恭喜抽中隐藏礼包！')
-      showHiddenGift.value = true
-    } else {
-      if (store.currentStage === DRAW_STAGES.COMPLETED) {
-      //  message.success('礼包抽取完成！')
-        showHiddenGift.value = false
-      }
-    }
-  }
-}
-
 const startRollingGift = () => {
   const gifts = store.isFirstDraw
     ? ['神秘礼包', '惊喜礼包', '隐藏礼包', '趣味礼包', '幸运礼包']
@@ -396,6 +267,17 @@ const startRollingGift = () => {
       handleDrawGift()
     }
   }, randomDuration)
+}
+
+const stopRolling = () => {
+  if (rollingTimer) {
+    clearInterval(rollingTimer)
+    rollingTimer = null
+  }
+  if (autoStopTimer) {
+    clearTimeout(autoStopTimer)
+    autoStopTimer = null
+  }
 }
 
 // 组件挂载时导入参与者名单
