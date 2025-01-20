@@ -15,6 +15,7 @@ const saveState = (state) => {
   const data = {
     version: STORAGE_VERSION,
     winners: state.winners,
+    participants: state.participants,
     availableParticipants: state.availableParticipants,
     rewardInventory: Array.from(state.rewardInventory.entries()),
     timestamp: new Date().getTime()
@@ -36,6 +37,7 @@ const loadState = () => {
 
     return {
       winners: data.winners,
+      participants: data.participants,
       availableParticipants: data.availableParticipants,
       rewardInventory: new Map(data.rewardInventory)
     }
@@ -74,7 +76,7 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
     // 导入参与者
     importParticipants(participants, forceReset = false) {
       // 如果已经有存储的状态且不是强制重置，就不重新初始化
-      if (!forceReset && this.participants && this.participants.length > 0) return
+      if (!forceReset && this.availableParticipants && this.availableParticipants.length > 0) return
 
       this.participants = participants
       this.resetAvailableParticipants()
