@@ -98,7 +98,7 @@ export const specialRewardPools = [
       '周科', '梁世辉', '栾兴华'
     ],
     items: [
-      { id: 'r1-15', name: '小米破壁机', count: 1 }
+      { id: 'r1-15', name: '小米破壁机1', count: 1 }
     ]
   }
 ]

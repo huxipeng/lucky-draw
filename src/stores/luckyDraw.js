@@ -179,16 +179,37 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       // 获取对应的奖励池
       const rewardPool = getPersonRewardPool(targetPerson.name)
       
-      // 抽取奖励
-      const availablePrizes = rewardPool.items.filter(item => {
-        const remainingCount = this.rewardInventory.get(item.id) ?? 0
-        return remainingCount > 0
-      })
+      // 检查是否是特殊奖池且是否还有可用奖品
+      let availablePrizes = []
+      if (rewardPool !== defaultRewardPool) {
+        // 如果是特殊奖池，先检查特殊奖池中的可用奖品
+        availablePrizes = rewardPool.items.filter(item => {
+          const remainingCount = this.rewardInventory.get(item.id) ?? 0
+          return remainingCount > 0
+        })
+
+        // 如果特殊奖池没有可用奖品，降级到默认奖池
+        if (availablePrizes.length === 0) {
+          console.log(`特殊奖池奖品已抽完，降级到默认奖池: ${targetPerson.name}`)
+          availablePrizes = defaultRewardPool.items.filter(item => {
+            const remainingCount = this.rewardInventory.get(item.id) ?? 0
+            return remainingCount > 0
+          })
+        }
+      } else {
+        // 如果是默认奖池，直接获取可用奖品
+        availablePrizes = rewardPool.items.filter(item => {
+          const remainingCount = this.rewardInventory.get(item.id) ?? 0
+          return remainingCount > 0
+        })
+      }
       
+      // 如果没有可用奖品，返回null
       if (availablePrizes.length === 0) {
         return null
       }
       
+      // 随机抽取一个奖品
       const reward = availablePrizes[Math.floor(Math.random() * availablePrizes.length)]
       
       // 更新库存
