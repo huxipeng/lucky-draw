@@ -145,7 +145,6 @@ import { ref, computed, onUnmounted, onMounted } from 'vue'
 import { useLuckyDrawStore, DRAW_STAGES } from '@/stores/luckyDraw'
 import { message } from 'ant-design-vue'
 import { participants } from '@/config/participants'
-import { punishmentPools } from '@/config/pools'
 
 const store = useLuckyDrawStore()
 const currentStage = computed(() => store.currentStage)
@@ -208,15 +207,6 @@ const handleDrawPerson = () => {
   }
 }
 
-const handleDrawPunishmentPools = () => {
-  store.drawPunishmentPools()
-  if (store.selectedPunishmentPools.length > 0) {
-    message.success(`抽中 ${store.selectedPunishmentPools.length} 个惩罚池`)
-  } else {
-    message.success('本次无需执行惩罚')
-  }
-}
-
 const handleDrawPunishment = () => {
   if (!isDrawing.value) {
     // 开始抽惩罚
@@ -227,7 +217,7 @@ const handleDrawPunishment = () => {
     store.stopDraw()
     stopRolling()
     // 从当前惩罚池中选择
-    const pool = store.selectedPunishmentPools[store.punishmentResults.length]
+    const pool = store.currentPunishmentPool
     const punishment = pool.items[Math.floor(Math.random() * pool.items.length)]
     store.addPunishmentResult(punishment)
     currentRollingPunishment.value = ''
@@ -284,7 +274,7 @@ const startRollingName = () => {
 }
 
 const startRollingPunishment = () => {
-  const pool = store.selectedPunishmentPools[store.punishmentResults.length]
+  const pool = store.currentPunishmentPool
   let lastIndex = -1
   rollingTimer = setInterval(() => {
     let randomIndex
@@ -334,11 +324,6 @@ const stopRolling = () => {
     clearTimeout(autoStopTimer)
     autoStopTimer = null
   }
-}
-
-// 惩罚池相关方法
-const isPoolSelected = (poolId) => {
-  return store.selectedPunishmentPools.some(pool => pool.id === poolId)
 }
 
 const startDraw = () => {

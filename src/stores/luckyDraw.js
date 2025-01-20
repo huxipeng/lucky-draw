@@ -1,10 +1,16 @@
 import { defineStore } from 'pinia'
-import { punishmentPools, rewardPools, personRewardPoolMap } from '@/config/pools'
+import { 
+  rewardPools, 
+  personRewardPoolMap, 
+  getPersonPunishmentPool,
+  getRandomCountByProbability
+} from '@/config/pools'
 
 // 抽奖阶段枚举
 export const DRAW_STAGES = {
   PERSON: 'PERSON',
-  GIFT: 'GIFT'
+  GIFT: 'GIFT',
+  COMPLETED: 'COMPLETED'
 }
 
 export const useLuckyDrawStore = defineStore('luckyDraw', {
@@ -18,9 +24,9 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
     // 当前抽中的人
     currentPerson: null,
     
-    // 礼包相关状态
-    selectedPunishmentPools: [], 
-    punishmentResults: [],
+    // 惩罚和奖励相关状态
+    currentPunishmentPool: null, // 当前使用的惩罚池
+    punishmentResults: [], // 抽中的惩罚结果
     currentRewardPool: null,
     rewardResult: null,
     hasDrawnHiddenGift: false,
@@ -35,7 +41,8 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
     currentStageText: (state) => {
       const stageMap = {
         [DRAW_STAGES.PERSON]: '抽取幸运观众',
-        [DRAW_STAGES.GIFT]: '抽取幸运奖品'
+        [DRAW_STAGES.GIFT]: '抽取幸运奖品',
+        [DRAW_STAGES.COMPLETED]: '抽奖完成'
       }
       return stageMap[state.currentStage]
     },
@@ -47,15 +54,11 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       )
     },
 
-    hasHiddenGift: (state) => {
-      return state.selectedPunishmentPools.length > 0
-    },
-
     // 获取当前抽取按钮的文本
     drawButtonText: (state) => {
       if (state.isDrawing) return '停止'
       if (state.isCompleted) return '抬走，有请下一位'
-      if (state.hasDrawnHiddenGift && state.hasHiddenGift) return '继续抽取'
+      if (state.hasDrawnHiddenGift && state.punishmentResults.length > 0) return '继续抽取'
       return '抽取礼品'
     }
   },
@@ -82,7 +85,7 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       this.isDrawing = false
     },
 
-    // 修改抽取流程
+    // 设置当前抽中的人
     setCurrentPerson(person) {
       this.currentPerson = person
       this.availableParticipants = this.availableParticipants.filter(p => p.id !== person.id)
@@ -91,43 +94,45 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       const poolId = personRewardPoolMap[person.name]
       this.currentRewardPool = rewardPools.find(pool => pool.id === poolId)
       
-      // 在后台自动抽取惩罚池
-      this.drawPunishmentPools()
+      // 设置对应的惩罚池
+      this.currentPunishmentPool = getPersonPunishmentPool(person.name)
       
       // 进入礼包抽取阶段
       this.currentStage = DRAW_STAGES.GIFT
     },
 
-    // 在后台自动抽取惩罚池
-    drawPunishmentPools() {
-      const count = Math.floor(Math.random() * 4) // 0-3个
-      const availablePools = [...punishmentPools]
-      this.selectedPunishmentPools = []
-      
-      for (let i = 0; i < count; i++) {
-        const randomIndex = Math.floor(Math.random() * availablePools.length)
-        this.selectedPunishmentPools.push(availablePools.splice(randomIndex, 1)[0])
-      }
-    },
-
-    // 修改抽取礼包的方法
+    // 抽取礼包
     async drawGift() {
       if (this.isFirstDraw) {
-        // 第一次抽取，只处理隐藏礼包
-        if (this.hasHiddenGift) {
-          this.punishmentResults = []  // 清空之前的结果
-          for (const pool of this.selectedPunishmentPools) {
-            const punishment = pool.items[Math.floor(Math.random() * pool.items.length)]
+        // 第一次抽取，处理惩罚
+        const punishmentPool = this.currentPunishmentPool
+        const count = getRandomCountByProbability(punishmentPool.drawCountProbability)
+        
+        if (count > 0) {
+          // 清空之前的结果
+          this.punishmentResults = []
+          
+          // 随机抽取指定数量的惩罚
+          const availablePunishments = [...punishmentPool.items]
+          for (let i = 0; i < count; i++) {
+            if (availablePunishments.length === 0) break
+            
+            const randomIndex = Math.floor(Math.random() * availablePunishments.length)
+            const punishment = availablePunishments.splice(randomIndex, 1)[0]
+            
             this.punishmentResults.push({
-              poolName: pool.name,
+              poolName: punishmentPool.name,
               name: punishment.name,
               id: punishment.id
             })
           }
+          
           this.hasDrawnHiddenGift = true
           this.isFirstDraw = false
-          return true // 返回 true 表示抽中了隐藏礼包
+          return true // 返回 true 表示抽中了惩罚
         }
+        
+        this.isFirstDraw = false
       }
       
       // 抽取奖励
@@ -145,13 +150,14 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       
       // 标记完成
       this.isCompleted = true
+      this.currentStage = DRAW_STAGES.COMPLETED
       return false // 返回 false 表示这是最终奖品抽取
     },
 
     // 重置当前抽奖
     resetCurrent() {
       this.currentPerson = null
-      this.selectedPunishmentPools = []
+      this.currentPunishmentPool = null
       this.punishmentResults = []
       this.currentRewardPool = null
       this.rewardResult = null
