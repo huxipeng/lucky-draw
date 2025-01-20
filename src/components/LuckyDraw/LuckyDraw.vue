@@ -192,6 +192,12 @@ const handleDrawPerson = () => {
 }
 
 const handleDrawGift = () => {
+  // 检查是否还有可用奖品
+  if (!isDrawing.value && store.availablePrizes.length === 0) {
+    message.warning('奖池已经被抢光了')
+    return
+  }
+
   if (!isDrawing.value) {
     isDrawing.value = true
     startRollingGift()
