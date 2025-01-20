@@ -42,8 +42,8 @@
               </div>
             </div>
 
-            <!-- 惩罚任务抽取阶段 -->
-            <div v-if="currentStage === DRAW_STAGES.PUNISHMENT" class="draw-section">
+            <!-- 奖品抽取阶段 -->
+            <div v-else class="draw-section">
               <div class="gift-info">
                 <div class="winner-name">
                   恭喜 {{ currentPerson?.name }}
@@ -53,7 +53,7 @@
                 </div>
                 <template v-else>
                   <!-- 显示惩罚任务 -->
-                  <div v-if="punishmentResults.length > 0" class="hidden-gift-reveal">
+                  <div v-if="punishmentResults.length > 0 && !isCompleted" class="hidden-gift-reveal">
                     <div class="reveal-title">
                       🎉 恭喜抽中趣味任务！
                     </div>
@@ -66,21 +66,7 @@
                       </div>
                     </div>
                   </div>
-                </template>
-              </div>
-            </div>
-
-            <!-- 礼品抽取阶段 -->
-            <div v-if="currentStage === DRAW_STAGES.GIFT" class="draw-section">
-              <div class="gift-info">
-                <div class="winner-name">
-                  恭喜 {{ currentPerson?.name }}
-                </div>
-                <div class="rolling-gift" v-if="isDrawing">
-                  {{ currentRollingGift }}
-                </div>
-                <template v-else>
-                  <!-- 显示最终结果 -->
+                  <!-- 显示最终奖品 -->
                   <div v-if="isCompleted" class="result-summary">
                     <div class="gift-content">
                       <div class="reveal-title">🎉 抽中年会奖品是：</div>
@@ -108,20 +94,10 @@
                   {{ isDrawing ? '停止' : '开始抽取' }}
                 </a-button>
               </template>
-              <template v-else-if="currentStage === DRAW_STAGES.PUNISHMENT">
+              <template v-else>
                 <a-button
                   type="primary"
-                  @click="handleDrawPunishment"
-                  :loading="isDrawing"
-                  size="large"
-                >
-                  {{ isDrawing ? '停止' : (punishmentResults.length > 0 ? '继续抽奖品' : '抽取任务') }}
-                </a-button>
-              </template>
-              <template v-else-if="currentStage === DRAW_STAGES.GIFT">
-                <a-button
-                  type="primary"
-                  @click="handleDrawGift"
+                  @click="handleDraw"
                   :loading="isDrawing"
                   size="large"
                 >
@@ -203,19 +179,8 @@ const resetConfirmLoading = ref(false)
 const canDrawPerson = computed(() => store.availableParticipants.length > 0)
 const drawButtonText = computed(() => {
   if (isDrawing.value) return '停止'
-  if (isCompleted.value) {
-    // 检查当前抽奖人的可用奖品
-    if (currentPerson.value) {
-      const availablePrizes = getPersonRewardPool(currentPerson.value.name).items.filter(item => {
-        const remainingCount = store.rewardInventory.get(item.id) ?? 0
-        return remainingCount > 0
-      })
-      // if (availablePrizes.length === 0) return '奖池已经被抢光了'
-    }
-    return '抬走，有请下一位'
-  }
-  if (punishmentResults.value.length > 0) return '继续抽取'
-  return '抽取礼品'
+  if (isCompleted.value) return '抬走，有请下一位'
+  return '抽取奖品'
 })
 
 // 表格列定义
@@ -260,12 +225,7 @@ const startRollingPrize = () => {
   const randomDuration = 3000 + Math.random() * 2000
   autoStopTimer = setTimeout(() => {
     if (isDrawing.value) {
-      // 根据当前阶段调用不同的处理函数
-      if (currentStage.value === DRAW_STAGES.PUNISHMENT) {
-        handleDrawPunishment()
-      } else if (currentStage.value === DRAW_STAGES.GIFT) {
-        handleDrawGift()
-      }
+      handleDraw()
     }
   }, randomDuration)
 }
@@ -289,64 +249,37 @@ const handleDrawPerson = () => {
   }
 }
 
-const handleDrawPunishment = () => {
-  if (punishmentResults.value.length > 0) {
-    // 如果已经抽到了惩罚任务，进入抽奖品阶段
-    currentStage.value = DRAW_STAGES.GIFT
-    return
-  }
-
-  if (!isDrawing.value) {
-    // 开始抽取（使用统一的滚动效果）
-    isDrawing.value = true
-    startRollingPrize()
-  } else {
-    // 停止抽取
-    isDrawing.value = false
-    stopRolling()
-    // 获取惩罚任务
-    const results = store.drawPunishment()
-    punishmentResults.value = results
-    currentRollingGift.value = ''  // 清空滚动显示
-    
-    // 如果没有抽到任务（results长度为0），直接进入抽奖品阶段
-    if (!results || results.length === 0) {
-      message.info('本次抽取没有抽中趣味任务，直接进入抽奖环节！')
-      currentStage.value = DRAW_STAGES.GIFT
-    } else {
-      message.success('恭喜抽中趣味任务！')
-    }
-  }
-}
-
-const handleDrawGift = () => {
+// 统一的抽取处理方法
+const handleDraw = () => {
   if (isCompleted.value) {
     handleReset()
     return
   }
 
-  // 检查是否还有可用奖品
-  const availablePrizes = getPersonRewardPool(currentPerson.value.name).items.filter(item => {
-    const remainingCount = store.rewardInventory.get(item.id) ?? 0
-    return remainingCount > 0
-  })
-
-  if (!isDrawing.value && availablePrizes.length === 0) {
-    message.warning('奖池已经被抢光了')
-    return
-  }
-
   if (!isDrawing.value) {
-    // 开始抽取（使用统一的滚动效果）
+    // 开始抽取
     isDrawing.value = true
     startRollingPrize()
   } else {
     // 停止抽取
     isDrawing.value = false
     stopRolling()
-    // 获取奖品
+
+    // 先尝试抽取惩罚任务
+    if (!punishmentResults.value.length) {
+      const results = store.drawPunishment()
+      punishmentResults.value = results
+      currentRollingGift.value = ''
+
+      if (results && results.length > 0) {
+        message.success('恭喜抽中趣味任务！')
+        return
+      }
+    }
+
+    // 如果没有抽中任务，或者已经显示过任务，就抽取奖品
     const reward = store.drawGift()
-    currentRollingGift.value = ''  // 清空滚动显示
+    currentRollingGift.value = ''
     if (reward) {
       rewardResult.value = reward
       isCompleted.value = true
@@ -944,17 +877,6 @@ onUnmounted(() => {
   box-shadow: 0 4px 12px rgba(255, 77, 79, 0.1);
 }
 
-.rolling-gift {
-  font-size: 48px;
-  font-weight: bold;
-  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: textGlow 2s ease-in-out infinite;
-  margin-top: 30px;
-  min-height: 72px;
-}
-
 .hidden-gift-reveal {
   margin-top: 30px;
   animation: fadeInUp 0.5s ease-out;
@@ -986,44 +908,6 @@ onUnmounted(() => {
   }
   50% {
     transform: scale(1.05);
-  }
-}
-
-.tasks-preview {
-  margin-top: 20px;
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.1);
-}
-
-.tasks-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-}
-
-.task-item {
-  background: rgba(255, 77, 79, 0.05);
-  border-radius: 12px;
-  padding: 16px;
-  font-size: 20px;
-  color: #ff4d4f;
-  transition: all 0.3s ease;
-  animation: fadeIn 0.5s ease-out;
-}
-
-.task-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.1);
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
   }
 }
 
