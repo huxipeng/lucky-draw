@@ -123,8 +123,10 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       const punishmentPool = getPersonPunishmentPool(targetPerson.name)
       let punishmentResults = []
       
-      // 处理惩罚任务
+      // 根据概率决定抽取任务的数量
       const count = getRandomCountByProbability(punishmentPool.drawCountProbability)
+      
+      // 只有当count大于0时才进行抽取
       if (count > 0) {
         const availablePunishments = [...punishmentPool.items]
         for (let i = 0; i < count; i++) {

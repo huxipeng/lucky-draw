@@ -317,8 +317,10 @@ const handleDrawPunishment = () => {
     // 获取惩罚任务
     const results = store.drawPunishment()
     punishmentResults.value = results
-    if (results.length === 0) {
-      // 如果没有惩罚任务，直接进入抽奖品阶段
+    
+    // 如果没有抽到任务（results长度为0），直接进入抽奖品阶段
+    if (!results || results.length === 0) {
+      message.info('本次抽取没有抽中趣味任务，直接进入抽奖环节！')
       currentStage.value = DRAW_STAGES.GIFT
     }
   }
