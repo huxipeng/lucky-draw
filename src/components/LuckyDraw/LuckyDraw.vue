@@ -241,41 +241,24 @@ const columns = [
   }
 ]
 
-// 开始滚动任务名称
-const startRollingTask = () => {
-  const punishmentPool = getPersonPunishmentPool(currentPerson.value.name)
-  const tasks = punishmentPool.items
-
+// 开始滚动奖品名称（统一的滚动效果）
+const startRollingPrize = () => {
+  const allPrizes = store.allPrizes
+  
   rollingTimer = setInterval(() => {
-    const randomTask = tasks[Math.floor(Math.random() * tasks.length)]
-    currentRollingTask.value = randomTask.name
+    const randomPrize = allPrizes[Math.floor(Math.random() * allPrizes.length)]
+    currentRollingGift.value = randomPrize
   }, 50)
 
   // 自动停止
   autoStopTimer = setTimeout(() => {
     if (isDrawing.value) {
-      handleDrawPunishment()
-    }
-  }, 3000)
-}
-
-// 开始滚动礼品名称
-const startRollingGift = () => {
-  const rewardPool = getPersonRewardPool(currentPerson.value.name)
-  const availablePrizes = rewardPool.items.filter(item => {
-    const remainingCount = store.rewardInventory.get(item.id) ?? 0
-    return remainingCount > 0
-  })
-
-  rollingTimer = setInterval(() => {
-    const randomPrize = availablePrizes[Math.floor(Math.random() * availablePrizes.length)]
-    currentRollingGift.value = randomPrize.name
-  }, 50)
-
-  // 自动停止
-  autoStopTimer = setTimeout(() => {
-    if (isDrawing.value) {
-      handleDrawGift()
+      // 根据当前阶段调用不同的处理函数
+      if (currentStage.value === DRAW_STAGES.PUNISHMENT) {
+        handleDrawPunishment()
+      } else if (currentStage.value === DRAW_STAGES.GIFT) {
+        handleDrawGift()
+      }
     }
   }, 3000)
 }
@@ -307,9 +290,9 @@ const handleDrawPunishment = () => {
   }
 
   if (!isDrawing.value) {
-    // 开始抽取惩罚任务
+    // 开始抽取（使用统一的滚动效果）
     isDrawing.value = true
-    startRollingTask()
+    startRollingPrize()
   } else {
     // 停止抽取
     isDrawing.value = false
@@ -322,6 +305,8 @@ const handleDrawPunishment = () => {
     if (!results || results.length === 0) {
       message.info('本次抽取没有抽中趣味任务，直接进入抽奖环节！')
       currentStage.value = DRAW_STAGES.GIFT
+    } else {
+      message.success('恭喜抽中趣味任务！')
     }
   }
 }
@@ -344,9 +329,9 @@ const handleDrawGift = () => {
   }
 
   if (!isDrawing.value) {
-    // 开始抽取
+    // 开始抽取（使用统一的滚动效果）
     isDrawing.value = true
-    startRollingGift()
+    startRollingPrize()
   } else {
     // 停止抽取
     isDrawing.value = false

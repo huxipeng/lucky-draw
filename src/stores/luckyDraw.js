@@ -77,6 +77,27 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
     }
   },
 
+  getters: {
+    // 获取所有奖品（去重）
+    allPrizes() {
+      const allPrizes = new Set()
+      
+      // 添加默认奖池的奖品
+      defaultRewardPool.items.forEach(item => {
+        allPrizes.add(item.name)
+      })
+      
+      // 添加特殊奖池的奖品
+      specialRewardPools.forEach(pool => {
+        pool.items.forEach(item => {
+          allPrizes.add(item.name)
+        })
+      })
+      
+      return Array.from(allPrizes)
+    }
+  },
+
   actions: {
     // 导入参与者
     importParticipants(participants, forceReset = false) {
