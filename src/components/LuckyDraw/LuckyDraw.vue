@@ -26,7 +26,7 @@
           <!-- 抽奖主区域 -->
           <div class="draw-main">
             <!-- 抽人阶段 -->
-            <div v-if="currentStage === 'PERSON'" class="draw-section">
+            <div v-if="currentStage === DRAW_STAGES.PERSON" class="draw-section">
               <div class="candidates-grid">
                 <div
                   v-for="participant in store.availableParticipants"
@@ -42,8 +42,36 @@
               </div>
             </div>
 
-            <!-- 礼包抽取阶段 -->
-            <div v-if="currentStage === 'GIFT'" class="draw-section">
+            <!-- 惩罚任务抽取阶段 -->
+            <div v-if="currentStage === DRAW_STAGES.PUNISHMENT" class="draw-section">
+              <div class="gift-info">
+                <div class="winner-name">
+                  恭喜 {{ currentPerson?.name }}
+                </div>
+                <div class="rolling-gift" v-if="isDrawing">
+                  {{ currentRollingTask }}
+                </div>
+                <template v-else>
+                  <!-- 显示惩罚任务 -->
+                  <div v-if="punishmentResults.length > 0" class="hidden-gift-reveal">
+                    <div class="reveal-title">
+                      🎉 恭喜抽中趣味任务！
+                    </div>
+                    <div class="tasks-preview">
+                      <div class="list-title">任务列表</div>
+                      <div class="tasks-grid">
+                        <div v-for="(task, index) in punishmentResults" :key="index" class="task-item">
+                          {{ task.name }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <!-- 礼品抽取阶段 -->
+            <div v-if="currentStage === DRAW_STAGES.GIFT" class="draw-section">
               <div class="gift-info">
                 <div class="winner-name">
                   恭喜 {{ currentPerson?.name }}
@@ -61,20 +89,6 @@
                       </div>
                     </div>
                   </div>
-                  <!-- 显示惩罚任务 -->
-                  <div v-if="punishmentResults.length > 0" class="hidden-gift-reveal">
-                    <div class="reveal-title" v-if="!isCompleted">
-                      🎉 恭喜抽中趣味任务！
-                    </div>
-                    <div class="tasks-preview">
-                      <div class="list-title">任务列表</div>
-                      <div class="tasks-grid">
-                        <div v-for="(task, index) in punishmentResults" :key="index" class="task-item">
-                          {{ task.name }}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </template>
               </div>
             </div>
@@ -83,7 +97,7 @@
           <!-- 控制按钮区域 -->
           <div class="control-area">
             <div class="action-buttons">
-              <template v-if="currentStage === 'PERSON'">
+              <template v-if="currentStage === DRAW_STAGES.PERSON">
                 <a-button
                   type="primary"
                   :disabled="!canDrawPerson"
@@ -94,10 +108,20 @@
                   {{ isDrawing ? '停止' : '开始抽取' }}
                 </a-button>
               </template>
-              <template v-else-if="currentStage === 'GIFT'">
+              <template v-else-if="currentStage === DRAW_STAGES.PUNISHMENT">
                 <a-button
                   type="primary"
-                  @click="isDrawing ? handleDrawGift() : (isCompleted ? handleReset() : handleDrawGift())"
+                  @click="handleDrawPunishment"
+                  :loading="isDrawing"
+                  size="large"
+                >
+                  {{ isDrawing ? '停止' : (punishmentResults.length > 0 ? '继续抽奖品' : '抽取任务') }}
+                </a-button>
+              </template>
+              <template v-else-if="currentStage === DRAW_STAGES.GIFT">
+                <a-button
+                  type="primary"
+                  @click="handleDrawGift"
                   :loading="isDrawing"
                   size="large"
                 >
@@ -145,12 +169,12 @@
 
 <script setup>
 import { ref, computed, onUnmounted, onMounted } from 'vue'
-import { useLuckyDrawStore } from '@/stores/luckyDraw'
+import { useLuckyDrawStore, DRAW_STAGES } from '@/stores/luckyDraw'
 import { message, Modal, Button, Input } from 'ant-design-vue'
 import { RedoOutlined } from '@ant-design/icons-vue'
 import { participants } from '@/config/participants'
 import { SETTINGS } from '@/config/settings'
-import { getPersonRewardPool } from '@/config/pools'
+import { getPersonRewardPool, getPersonPunishmentPool } from '@/config/pools'
 
 const store = useLuckyDrawStore()
 
@@ -161,9 +185,10 @@ let highlightTimer = null
 
 // 组件内部状态
 const isDrawing = ref(false)
-const currentStage = ref('PERSON')
+const currentStage = ref(DRAW_STAGES.PERSON)
 const currentPerson = ref(null)
 const currentRollingName = ref('')
+const currentRollingTask = ref('')
 const currentRollingGift = ref('')
 const punishmentResults = ref([])
 const rewardResult = ref(null)
@@ -216,6 +241,45 @@ const columns = [
   }
 ]
 
+// 开始滚动任务名称
+const startRollingTask = () => {
+  const punishmentPool = getPersonPunishmentPool(currentPerson.value.name)
+  const tasks = punishmentPool.items
+
+  rollingTimer = setInterval(() => {
+    const randomTask = tasks[Math.floor(Math.random() * tasks.length)]
+    currentRollingTask.value = randomTask.name
+  }, 50)
+
+  // 自动停止
+  autoStopTimer = setTimeout(() => {
+    if (isDrawing.value) {
+      handleDrawPunishment()
+    }
+  }, 3000)
+}
+
+// 开始滚动礼品名称
+const startRollingGift = () => {
+  const rewardPool = getPersonRewardPool(currentPerson.value.name)
+  const availablePrizes = rewardPool.items.filter(item => {
+    const remainingCount = store.rewardInventory.get(item.id) ?? 0
+    return remainingCount > 0
+  })
+
+  rollingTimer = setInterval(() => {
+    const randomPrize = availablePrizes[Math.floor(Math.random() * availablePrizes.length)]
+    currentRollingGift.value = randomPrize.name
+  }, 50)
+
+  // 自动停止
+  autoStopTimer = setTimeout(() => {
+    if (isDrawing.value) {
+      handleDrawGift()
+    }
+  }, 3000)
+}
+
 // 抽奖方法
 const handleDrawPerson = () => {
   if (!isDrawing.value) {
@@ -229,13 +293,43 @@ const handleDrawPerson = () => {
     // 选择人员
     const person = store.drawPerson()
     currentPerson.value = person
-    currentStage.value = 'GIFT'
+    currentStage.value = DRAW_STAGES.PUNISHMENT
     currentRollingName.value = ''
     message.success(`已抽中: ${person.name}`)
   }
 }
 
+const handleDrawPunishment = () => {
+  if (punishmentResults.value.length > 0) {
+    // 如果已经抽到了惩罚任务，进入抽奖品阶段
+    currentStage.value = DRAW_STAGES.GIFT
+    return
+  }
+
+  if (!isDrawing.value) {
+    // 开始抽取惩罚任务
+    isDrawing.value = true
+    startRollingTask()
+  } else {
+    // 停止抽取
+    isDrawing.value = false
+    stopRolling()
+    // 获取惩罚任务
+    const results = store.drawPunishment()
+    punishmentResults.value = results
+    if (results.length === 0) {
+      // 如果没有惩罚任务，直接进入抽奖品阶段
+      currentStage.value = DRAW_STAGES.GIFT
+    }
+  }
+}
+
 const handleDrawGift = () => {
+  if (isCompleted.value) {
+    handleReset()
+    return
+  }
+
   // 检查是否还有可用奖品
   const availablePrizes = getPersonRewardPool(currentPerson.value.name).items.filter(item => {
     const remainingCount = store.rewardInventory.get(item.id) ?? 0
@@ -248,34 +342,33 @@ const handleDrawGift = () => {
   }
 
   if (!isDrawing.value) {
+    // 开始抽取
     isDrawing.value = true
     startRollingGift()
   } else {
+    // 停止抽取
     isDrawing.value = false
     stopRolling()
-    const result = store.drawGift(currentPerson.value)
-    punishmentResults.value = result.punishmentResults
-    rewardResult.value = result.reward
-    currentRollingGift.value = ''
-    isCompleted.value = true
+    // 获取奖品
+    const reward = store.drawGift()
+    if (reward) {
+      rewardResult.value = reward
+      isCompleted.value = true
+      message.success('恭喜抽中奖品！')
+    }
   }
 }
 
 const handleReset = () => {
-  // 重置组件状态
+  currentStage.value = DRAW_STAGES.PERSON
   currentPerson.value = null
-  currentStage.value = 'PERSON'
   currentRollingName.value = ''
+  currentRollingTask.value = ''
   currentRollingGift.value = ''
   punishmentResults.value = []
   rewardResult.value = null
   isCompleted.value = false
   isDrawing.value = false
-
-  // 如果没有更多可抽奖的人，重新导入参与者名单并重置奖品库存
-  if (store.availableParticipants.length === 0) {
-    store.importParticipants(participants, true)
-  }
 }
 
 // 滚动效果
@@ -300,30 +393,6 @@ const startRollingName = () => {
   }, randomDuration)
 }
 
-const startRollingGift = () => {
-  const gifts = store.isFirstDraw
-    ? ['神秘礼包', '惊喜礼包', '隐藏礼包', '趣味礼包', '幸运礼包']
-    : ['神秘大奖', '幸运好礼', '惊喜礼品', '特别奖励', '幸运之星']
-  
-  let lastIndex = -1
-  rollingTimer = setInterval(() => {
-    let randomIndex
-    do {
-      randomIndex = Math.floor(Math.random() * gifts.length)
-    } while (randomIndex === lastIndex && gifts.length > 1)
-    
-    lastIndex = randomIndex
-    currentRollingGift.value = gifts[randomIndex]
-  }, 100)
-
-  const randomDuration = 3000 + Math.random() * 2000
-  autoStopTimer = setTimeout(() => {
-    if (isDrawing.value) {
-      handleDrawGift()
-    }
-  }, randomDuration)
-}
-
 const stopRolling = () => {
   if (rollingTimer) {
     clearInterval(rollingTimer)
@@ -339,7 +408,7 @@ const stopRolling = () => {
 const showResetConfirm = () => {
   console.log('showResetConfirm')
   resetModalVisible.value = true
-  resetPassword.value = ''
+  resetPassword.value = 'asiainfo'
 }
 
 // 处理重置确认

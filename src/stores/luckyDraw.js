@@ -49,9 +49,10 @@ const loadState = () => {
 
 // 抽奖阶段枚举
 export const DRAW_STAGES = {
-  PERSON: 'PERSON',
-  GIFT: 'GIFT',
-  COMPLETED: 'COMPLETED'
+  PERSON: 'PERSON',          // 抽人阶段
+  PUNISHMENT: 'PUNISHMENT',  // 抽幸运任务阶段
+  GIFT: 'GIFT',             // 抽奖品阶段
+  COMPLETED: 'COMPLETED'     // 完成阶段
 }
 
 export const useLuckyDrawStore = defineStore('luckyDraw', {
@@ -68,7 +69,11 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       rewardInventory: new Map(),
       
       // 获奖记录
-      winners: []
+      winners: [],
+
+      // 当前抽奖临时状态
+      currentPerson: null,
+      currentPunishments: []
     }
   },
 
@@ -110,25 +115,15 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       saveState(this.$state)
     },
 
-    // 抽取参与者
-    drawPerson() {
-      const person = this.availableParticipants[Math.floor(Math.random() * this.availableParticipants.length)]
-      this.availableParticipants = this.availableParticipants.filter(p => p.id !== person.id)
+    // 抽取惩罚任务
+    drawPunishment(person) {
+      if (!person && !this.currentPerson) return null
+      const targetPerson = person || this.currentPerson
       
-      // 保存状态
-      saveState(this.$state)
-      
-      return person
-    },
-
-    // 抽取礼物
-    drawGift(person) {
-      // 获取对应的奖励池
-      const rewardPool = getPersonRewardPool(person.name)
-      const punishmentPool = getPersonPunishmentPool(person.name)
+      const punishmentPool = getPersonPunishmentPool(targetPerson.name)
+      let punishmentResults = []
       
       // 处理惩罚任务
-      let punishmentResults = []
       const count = getRandomCountByProbability(punishmentPool.drawCountProbability)
       if (count > 0) {
         const availablePunishments = [...punishmentPool.items]
@@ -143,6 +138,23 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
           })
         }
       }
+
+      // 保存当前惩罚结果
+      this.currentPunishments = punishmentResults
+      
+      // 保存状态
+      saveState(this.$state)
+      
+      return punishmentResults
+    },
+
+    // 抽取礼物（修改后只负责抽取奖品）
+    drawGift(person) {
+      if (!person && !this.currentPerson) return null
+      const targetPerson = person || this.currentPerson
+      
+      // 获取对应的奖励池
+      const rewardPool = getPersonRewardPool(targetPerson.name)
       
       // 抽取奖励
       const availablePrizes = rewardPool.items.filter(item => {
@@ -151,7 +163,7 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       })
       
       if (availablePrizes.length === 0) {
-        return { punishmentResults, reward: null }
+        return null
       }
       
       const reward = availablePrizes[Math.floor(Math.random() * availablePrizes.length)]
@@ -164,16 +176,34 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       
       // 添加到获奖记录
       this.winners.push({
-        winner: person,
+        winner: targetPerson,
         prize: reward,
-        tasks: punishmentResults,
+        tasks: this.currentPunishments,
         timestamp: new Date().getTime()
       })
+
+      // 清理临时状态
+      this.currentPerson = null
+      this.currentPunishments = []
       
       // 保存状态
       saveState(this.$state)
       
-      return { punishmentResults, reward }
+      return reward
+    },
+
+    // 抽取参与者（修改以保存当前抽中的人）
+    drawPerson() {
+      const person = this.availableParticipants[Math.floor(Math.random() * this.availableParticipants.length)]
+      this.availableParticipants = this.availableParticipants.filter(p => p.id !== person.id)
+      
+      // 保存当前抽中的人
+      this.currentPerson = person
+      
+      // 保存状态
+      saveState(this.$state)
+      
+      return person
     },
 
     // 完全重置
