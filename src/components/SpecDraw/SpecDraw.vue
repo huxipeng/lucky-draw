@@ -63,7 +63,7 @@ const isDrawing = ref(false)
 const showResult = ref(false)
 const winner = ref('')
 const showCountdown = ref(false)
-const countdown = ref(5)
+const countdown = ref(10)
 let radius = 350
 let dtr = Math.PI/180
 let d = 500
@@ -275,6 +275,10 @@ const initTags = () => {
 }
 
 const startDraw = () => {
+  // 重置倒计时
+  countdown.value = 10
+  showCountdown.value = false
+  
   isDrawing.value = true
   tspeed = 15
   baseSpeed = 0.2
@@ -290,11 +294,13 @@ const startDraw = () => {
         stopDraw()
       }
     }, 1000)
-  }, 5000)
+  }, 5000)  // 改为5秒后开始倒计时
 }
 
 const stopDraw = () => {
   isDrawing.value = false
+  showCountdown.value = false
+  countdown.value = 10
   tspeed = 5
   baseSpeed = 0.05
   const randomIndex = Math.floor(Math.random() * participants.length)
@@ -503,17 +509,18 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.3);  /* 加深背景 */
   z-index: 1000;
   pointer-events: none;
 }
 
 .countdown-number {
-  font-size: 200px;
+  font-size: 400px;  /* 增大字体 */
   font-weight: bold;
   color: #ff4d4f;
-  text-shadow: 0 0 20px rgba(255, 77, 79, 0.8);
+  text-shadow: 0 0 40px rgba(255, 77, 79, 0.8);  /* 增强阴影 */
   animation: countdown-animation 1s ease-in-out infinite;
+  -webkit-text-stroke: 4px #fff;  /* 添加白色描边 */
 }
 
 @keyframes countdown-animation {
@@ -522,7 +529,7 @@ onBeforeUnmount(() => {
     opacity: 0;
   }
   50% {
-    transform: scale(1.2);
+    transform: scale(1.4);  /* 增大缩放比例 */
     opacity: 1;
   }
   100% {
