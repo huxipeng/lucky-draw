@@ -7,20 +7,26 @@
             <div class="card-title-wrapper">
               <div class="title-section">
                 <span class="title-text">年终大奖</span>
-                <a-button 
-                  type="link" 
-                  class="lucky-draw-btn"
-                  @click="goToLuckyDraw"
-                >
-                  幸运抽奖
-                </a-button>
               </div>
               <div class="title-actions">
                 <a-button 
-                  type="text" 
-                  @click="goToLuckyDraw"
+                  type="primary"
+                  size="large"
+                  :disabled="isDrawing"
+                  @click="startDraw"
+                  class="action-btn"
                 >
-                  返回
+                  开始抽奖
+                </a-button>
+                <a-button 
+                  type="primary" 
+                  danger
+                  size="large"
+                  :disabled="!isDrawing"
+                  @click="stopDraw"
+                  class="action-btn"
+                >
+                  停止抽奖
                 </a-button>
               </div>
             </div>
@@ -29,25 +35,6 @@
           <!-- 抽奖主区域 -->
           <div class="draw-main">
             <div ref="tagCloudContainer" class="tag-cloud-container"></div>
-            <div class="controls">
-              <a-button 
-                type="primary" 
-                size="large"
-                :disabled="isDrawing"
-                @click="startDraw"
-              >
-                开始抽奖
-              </a-button>
-              <a-button 
-                type="primary" 
-                danger
-                size="large"
-                :disabled="!isDrawing"
-                @click="stopDraw"
-              >
-                停止抽奖
-              </a-button>
-            </div>
             <!-- 中奖结果 -->
             <a-modal
               v-model:visible="showResult"
@@ -72,15 +59,16 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
+import { participants } from '@/config/participants'
 
 const router = useRouter()
 const tagCloudContainer = ref(null)
 const isDrawing = ref(false)
 const showResult = ref(false)
 const winner = ref('')
-let radius = 150
+let radius = 250
 let dtr = Math.PI/180
-let d = 300
+let d = 400
 let mcList = []
 let active = false
 let lasta = 1
@@ -88,7 +76,7 @@ let lastb = 1
 let distr = true
 let tspeed = 5
 let baseSpeed = 0.05
-let size = 250
+let size = 350
 let mouseX = 0
 let mouseY = 0
 let howElliptical = 1
@@ -102,13 +90,10 @@ let sc = 0
 let cc = 0
 let intervalId = null
 let autoRotateInterval = null
-
-// 模拟参与者数据
-const participants = [
-  '张三', '李四', '王五', '赵六', '钱七', '孙八', 
-  '周九', '吴十', '郑十一', '王十二', '李十三', 
-  '刘十四', '陈十五', '杨十六', '黄十七', '赵十八'
-]
+let rotationX = 0
+let rotationY = 0
+let rotationZ = 0
+let rotationDirection = { x: 1, y: 1, z: 1 }
 
 const goToLuckyDraw = () => {
   router.push('/')
@@ -231,7 +216,7 @@ const doPosition = () => {
       let item = aA[i]
       item.style.left = mcList[i].cx + l - item.offsetWidth/2 + 'px'
       item.style.top = mcList[i].cy + t - item.offsetHeight/2 + 'px'
-      item.style.fontSize = Math.ceil(12 * mcList[i].scale/2) + 8 + 'px'
+      item.style.fontSize = Math.ceil(16 * mcList[i].scale/2) + 12 + 'px'
       item.style.opacity = mcList[i].alpha
     } else {
       let item = aA[i]
@@ -302,15 +287,15 @@ const stopDraw = () => {
   baseSpeed = 0.05
   // 随机选择获奖者
   const randomIndex = Math.floor(Math.random() * participants.length)
-  winner.value = participants[randomIndex]
+  winner.value = participants[randomIndex].name
   showResult.value = true
 }
 
 onMounted(() => {
   // 创建标签
-  participants.forEach(name => {
+  participants.forEach(person => {
     const span = document.createElement('span')
-    span.textContent = name
+    span.textContent = person.name
     span.style.position = 'absolute'
     span.style.cursor = 'pointer'
     tagCloudContainer.value.appendChild(span)
@@ -332,23 +317,29 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .spec-draw {
-  height: 100%;
+  height: 100vh;
+  width: 100%;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(135deg, #fff5f5 0%, #fff1f0 100%);
+  overflow: hidden;
 }
 
 .draw-container {
-  height: 100%;
   flex: 1;
+  padding: 8px !important;
+  display: flex;
+  flex-direction: column;
 }
 
 .draw-area {
-  height: 100%;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  background: #fff;
-  border: none;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.5) !important;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+  overflow: hidden;
 }
 
 .card-title-wrapper {
@@ -356,12 +347,29 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .title-section {
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.title-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-btn {
+  height: 40px;
+  padding: 0 24px;
+  font-size: 16px;
+  border-radius: 20px;
 }
 
 .title-text {
@@ -384,28 +392,22 @@ onBeforeUnmount(() => {
 }
 
 .draw-main {
-  min-height: 400px;
-  background: linear-gradient(135deg, #fff5f5 0%, #fff1f0 100%);
-  border-radius: 16px;
-  padding: 24px;
-  margin-bottom: 24px;
+  flex: 1;
   position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(255, 77, 79, 0.1);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  min-height: 0;
 }
 
 .tag-cloud-container {
-  width: 100%;
-  height: 400px;
+  flex: 1;
   position: relative;
   color: #ff4d4f;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 40px;
+  min-height: calc(100vh - 150px);
 }
 
 .tag-cloud-container span {
@@ -414,42 +416,57 @@ onBeforeUnmount(() => {
   transition: all 0.3s ease;
   position: absolute;
   text-shadow: 1px 1px 5px rgba(255, 77, 79, 0.2);
+  font-size: 28px !important;
 }
 
 .tag-cloud-container span:hover {
   color: #ff7875;
   text-shadow: 2px 2px 8px rgba(255, 77, 79, 0.4);
-  transform: scale(1.1);
-}
-
-.controls {
-  margin-top: 24px;
-  display: flex;
-  gap: 16px;
-  z-index: 100;
+  transform: scale(1.15);
 }
 
 .result-content {
   text-align: center;
-  padding: 24px;
+  padding: 32px;
 }
 
 .winner-info {
-  font-size: 24px;
+  font-size: 28px;
   color: #ff4d4f;
   font-weight: 500;
 }
 
 .winner-name {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 600;
   color: #ff4d4f;
-  margin: 0 8px;
+  margin: 0 12px;
+  text-shadow: 2px 2px 8px rgba(255, 77, 79, 0.2);
 }
 
 :deep(.ant-card-body) {
   flex: 1;
-  overflow: auto;
-  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+  min-height: 0;
+}
+
+:deep(.ant-modal-content) {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.ant-modal-header) {
+  border-bottom: none;
+  padding: 24px 24px 0;
+}
+
+:deep(.ant-modal-title) {
+  font-size: 24px;
+  text-align: center;
+  color: #ff4d4f;
 }
 </style>
