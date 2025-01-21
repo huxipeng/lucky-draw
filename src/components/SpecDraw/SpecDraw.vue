@@ -78,7 +78,7 @@ const tagCloudContainer = ref(null)
 const isDrawing = ref(false)
 const showResult = ref(false)
 const winner = ref('')
-let radius = 200
+let radius = 150
 let dtr = Math.PI/180
 let d = 300
 let mcList = []
@@ -86,7 +86,8 @@ let active = false
 let lasta = 1
 let lastb = 1
 let distr = true
-let tspeed = 10
+let tspeed = 5
+let baseSpeed = 0.05
 let size = 250
 let mouseX = 0
 let mouseY = 0
@@ -100,6 +101,7 @@ let cb = 0
 let sc = 0
 let cc = 0
 let intervalId = null
+let autoRotateInterval = null
 
 // 模拟参与者数据
 const participants = [
@@ -120,17 +122,12 @@ const update = () => {
     a = (-Math.min(Math.max(-mouseY, -size), size) / radius) * tspeed
     b = (Math.min(Math.max(-mouseX, -size), size) / radius) * tspeed
   } else {
-    a = lasta * 0.98
-    b = lastb * 0.98
+    a = lasta * 0.98 + baseSpeed
+    b = lastb * 0.98 + baseSpeed
   }
   
   lasta = a
   lastb = b
-
-  if (Math.abs(a) <= 0.01 && Math.abs(b) <= 0.01) {
-    a = 0.02
-    b = 0.02
-  }
 
   sineCosine(a, b, 0)
 
@@ -295,12 +292,14 @@ const initTags = () => {
 
 const startDraw = () => {
   isDrawing.value = true
-  tspeed = 30
+  tspeed = 15
+  baseSpeed = 0.2
 }
 
 const stopDraw = () => {
   isDrawing.value = false
-  tspeed = 10
+  tspeed = 5
+  baseSpeed = 0.05
   // 随机选择获奖者
   const randomIndex = Math.floor(Math.random() * participants.length)
   winner.value = participants[randomIndex]
@@ -404,17 +403,23 @@ onBeforeUnmount(() => {
   height: 400px;
   position: relative;
   color: #ff4d4f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tag-cloud-container span {
   color: #ff4d4f;
   font-weight: bold;
   transition: all 0.3s ease;
+  position: absolute;
+  text-shadow: 1px 1px 5px rgba(255, 77, 79, 0.2);
 }
 
 .tag-cloud-container span:hover {
   color: #ff7875;
-  text-shadow: 1px 1px 3px rgba(255, 77, 79, 0.3);
+  text-shadow: 2px 2px 8px rgba(255, 77, 79, 0.4);
+  transform: scale(1.1);
 }
 
 .controls {
