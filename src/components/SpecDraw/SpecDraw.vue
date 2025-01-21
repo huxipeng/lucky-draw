@@ -431,12 +431,50 @@ onBeforeUnmount(() => {
 }
 
 .action-btn {
-  height: 40px;
-  padding: 0 24px;
-  font-size: 16px;
-  border-radius: 20px;
+  height: 48px;
+  padding: 0 32px;
+  font-size: 18px;
+  border-radius: 24px;
   position: relative;
   z-index: 1001;
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  border: none;
+  color: white;
+  font-weight: 500;
+  box-shadow: 0 8px 16px rgba(255, 77, 79, 0.3);
+  transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 20px rgba(255, 77, 79, 0.4);
+  background: linear-gradient(135deg, #ff7875 0%, #ff4d4f 100%);
+}
+
+.action-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 5px 12px rgba(255, 77, 79, 0.4);
+}
+
+.action-btn[disabled] {
+  background: linear-gradient(135deg, #ffa39e 0%, #ffccc7 100%);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.action-btn::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+  border-radius: 25px;
+  z-index: -1;
+  opacity: 0;
+  transition: all 0.3s ease;
 }
 
 .title-text {
