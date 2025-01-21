@@ -209,7 +209,7 @@ const positionAll = () => {
 
 const doPosition = () => {
   let l = oDiv.offsetWidth / 2
-  let t = oDiv.offsetHeight / 2
+  let t = oDiv.offsetHeight / 2 - 50
 
   for (let i = 0; i < mcList.length; i++) {
     if (mcList[i].alpha > 0.1) {
@@ -397,7 +397,8 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding-bottom: 40px;
+  padding: 0;
+  margin-top: -60px;
 }
 
 .tag-cloud-container {
@@ -405,10 +406,11 @@ onBeforeUnmount(() => {
   position: relative;
   color: #ff4d4f;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: 80px 20px 20px;
+  padding: 0;
   min-height: calc(100vh - 120px);
+  transform: translateY(-50px);
 }
 
 .tag-cloud-container span {
