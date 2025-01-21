@@ -72,14 +72,34 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-import TagCloud from 'TagCloud'
 
 const router = useRouter()
 const tagCloudContainer = ref(null)
-let tagCloudInstance = null
 const isDrawing = ref(false)
 const showResult = ref(false)
 const winner = ref('')
+let radius = 200
+let dtr = Math.PI/180
+let d = 300
+let mcList = []
+let active = false
+let lasta = 1
+let lastb = 1
+let distr = true
+let tspeed = 10
+let size = 250
+let mouseX = 0
+let mouseY = 0
+let howElliptical = 1
+let aA = null
+let oDiv = null
+let sa = 0
+let ca = 0
+let sb = 0
+let cb = 0
+let sc = 0
+let cc = 0
+let intervalId = null
 
 // 模拟参与者数据
 const participants = [
@@ -92,43 +112,221 @@ const goToLuckyDraw = () => {
   router.push('/')
 }
 
-const initTagCloud = () => {
-  const options = {
-    radius: 200,
-    maxSpeed: 'normal',
-    initSpeed: 'normal',
-    direction: 135,
-    keep: true
+const update = () => {
+  let a
+  let b
+
+  if (active) {
+    a = (-Math.min(Math.max(-mouseY, -size), size) / radius) * tspeed
+    b = (Math.min(Math.max(-mouseX, -size), size) / radius) * tspeed
+  } else {
+    a = lasta * 0.98
+    b = lastb * 0.98
   }
   
-  tagCloudInstance = TagCloud(tagCloudContainer.value, participants, options)
+  lasta = a
+  lastb = b
+
+  if (Math.abs(a) <= 0.01 && Math.abs(b) <= 0.01) {
+    a = 0.02
+    b = 0.02
+  }
+
+  sineCosine(a, b, 0)
+
+  for (let j = 0; j < mcList.length; j++) {
+    let rx1 = mcList[j].cx
+    let ry1 = mcList[j].cy * ca + mcList[j].cz * (-sa)
+    let rz1 = mcList[j].cy * sa + mcList[j].cz * ca
+
+    let rx2 = rx1 * cb + rz1 * sb
+    let ry2 = ry1
+    let rz2 = rx1 * (-sb) + rz1 * cb
+
+    let rx3 = rx2 * cc + ry2 * (-sc)
+    let ry3 = rx2 * sc + ry2 * cc
+    let rz3 = rz2
+
+    mcList[j].cx = rx3
+    mcList[j].cy = ry3
+    mcList[j].cz = rz3
+
+    let per = d / (d + rz3)
+
+    mcList[j].x = (howElliptical * rx3 * per) - (howElliptical * 2)
+    mcList[j].y = ry3 * per
+    mcList[j].scale = per
+    mcList[j].alpha = per
+
+    mcList[j].alpha = (mcList[j].alpha - 0.6) * (10/6)
+  }
+
+  doPosition()
+  depthSort()
+}
+
+const depthSort = () => {
+  let aTmp = []
+
+  for (let i=0; i<aA.length; i++) {
+    aTmp.push(aA[i])
+  }
+
+  aTmp.sort(function (vItem1, vItem2) {
+    if (vItem1.cz > vItem2.cz) {
+      return -1
+    } else if (vItem1.cz < vItem2.cz) {
+      return 1
+    } else {
+      return 0
+    }
+  })
+
+  for (let i=0; i<aTmp.length; i++) {
+    aTmp[i].style.zIndex = i
+  }
+}
+
+const positionAll = () => {
+  let phi = 0
+  let theta = 0
+  let max = mcList.length
+  let i = 0
+
+  let aTmp = []
+  let oFragment = document.createDocumentFragment()
+  
+  for (i = 0; i < aA.length; i++) {
+    aTmp.push(aA[i])
+  }
+
+  aTmp.sort(function () {
+    return Math.random() < 0.5 ? 1 : -1
+  })
+
+  for (i = 0; i < aTmp.length; i++) {
+    oFragment.appendChild(aTmp[i])
+  }
+  
+  oDiv.appendChild(oFragment)
+
+  for (let i = 1; i < max + 1; i++) {
+    if (distr) {
+      phi = Math.acos(-1 + (2 * i - 1) / max)
+      theta = Math.sqrt(max * Math.PI) * phi
+    } else {
+      phi = Math.random() * (Math.PI)
+      theta = Math.random() * (2 * Math.PI)
+    }
+
+    mcList[i - 1].cx = radius * Math.cos(theta) * Math.sin(phi)
+    mcList[i - 1].cy = radius * Math.sin(theta) * Math.sin(phi)
+    mcList[i - 1].cz = radius * Math.cos(phi)
+  }
+}
+
+const doPosition = () => {
+  let l = oDiv.offsetWidth / 2
+  let t = oDiv.offsetHeight / 2
+
+  for (let i = 0; i < mcList.length; i++) {
+    if (mcList[i].alpha > 0.1) {
+      let item = aA[i]
+      item.style.left = mcList[i].cx + l - item.offsetWidth/2 + 'px'
+      item.style.top = mcList[i].cy + t - item.offsetHeight/2 + 'px'
+      item.style.fontSize = Math.ceil(12 * mcList[i].scale/2) + 8 + 'px'
+      item.style.opacity = mcList[i].alpha
+    } else {
+      let item = aA[i]
+      item.style.opacity = 0
+    }
+  }
+}
+
+const sineCosine = (a, b, c) => {
+  sa = Math.sin(a * dtr)
+  ca = Math.cos(a * dtr)
+  sb = Math.sin(b * dtr)
+  cb = Math.cos(b * dtr)
+  sc = Math.sin(c * dtr)
+  cc = Math.cos(c * dtr)
+}
+
+const initTags = () => {
+  oDiv = tagCloudContainer.value
+  aA = oDiv.getElementsByTagName('span')
+
+  for (let i = 0; i < aA.length; i++) {
+    mcList.push({
+      cx: 0,
+      cy: 0,
+      cz: 0,
+      x: 0,
+      y: 0,
+      scale: 1,
+      alpha: 1
+    })
+  }
+
+  sineCosine(0, 0, 0)
+  positionAll()
+  
+  oDiv.onmouseover = () => {
+    active = true
+  }
+  
+  oDiv.onmouseout = () => {
+    active = false
+  }
+  
+  oDiv.onmousemove = (ev) => {
+    let oEvent = window.event || ev
+    mouseX = oEvent.clientX - (oDiv.offsetLeft + oDiv.offsetWidth/2)
+    mouseY = oEvent.clientY - (oDiv.offsetTop + oDiv.offsetHeight/2)
+    mouseX /= 5
+    mouseY /= 5
+  }
+
+  if (intervalId) {
+    clearInterval(intervalId)
+  }
+  intervalId = setInterval(update, 30)
 }
 
 const startDraw = () => {
   isDrawing.value = true
-  if (tagCloudInstance) {
-    tagCloudInstance.update({ maxSpeed: 'fast' })
-  }
+  tspeed = 30
 }
 
 const stopDraw = () => {
   isDrawing.value = false
-  if (tagCloudInstance) {
-    tagCloudInstance.update({ maxSpeed: 'slow' })
-    // 随机选择获奖者
-    const randomIndex = Math.floor(Math.random() * participants.length)
-    winner.value = participants[randomIndex]
-    showResult.value = true
-  }
+  tspeed = 10
+  // 随机选择获奖者
+  const randomIndex = Math.floor(Math.random() * participants.length)
+  winner.value = participants[randomIndex]
+  showResult.value = true
 }
 
 onMounted(() => {
-  initTagCloud()
+  // 创建标签
+  participants.forEach(name => {
+    const span = document.createElement('span')
+    span.textContent = name
+    span.style.position = 'absolute'
+    span.style.cursor = 'pointer'
+    tagCloudContainer.value.appendChild(span)
+  })
+  
+  initTags()
 })
 
 onBeforeUnmount(() => {
-  if (tagCloudInstance) {
-    tagCloudInstance.destroy()
+  // 清理工作
+  if (intervalId) {
+    clearInterval(intervalId)
+  }
+  if (tagCloudContainer.value) {
+    tagCloudContainer.value.innerHTML = ''
   }
 })
 </script>
@@ -205,34 +403,25 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 400px;
   position: relative;
-}
-
-:deep(.tagcloud) {
-  font-family: 'Inter', sans-serif;
-  font-weight: 600;
-  letter-spacing: 0.0625em;
-  font-size: 1.1em;
-}
-
-:deep(.tagcloud--item) {
   color: #ff4d4f;
-  padding: 2px 4px;
-  background-color: transparent;
-  border-radius: 3px;
-  border: 1px solid transparent;
-  cursor: pointer;
+}
+
+.tag-cloud-container span {
+  color: #ff4d4f;
+  font-weight: bold;
   transition: all 0.3s ease;
 }
 
-:deep(.tagcloud--item:hover) {
-  background-color: rgba(255, 77, 79, 0.1);
-  border-color: #ff4d4f;
+.tag-cloud-container span:hover {
+  color: #ff7875;
+  text-shadow: 1px 1px 3px rgba(255, 77, 79, 0.3);
 }
 
 .controls {
   margin-top: 24px;
   display: flex;
   gap: 16px;
+  z-index: 100;
 }
 
 .result-content {
