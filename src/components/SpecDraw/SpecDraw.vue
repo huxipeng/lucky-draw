@@ -56,7 +56,7 @@
               :footer="null"
               :maskClosable="false"
               centered
-              width="800px"
+              width="1200px"
               class="result-modal"
             >
               <div class="result-content">
@@ -404,21 +404,26 @@ const getConfettiStyle = (n) => {
   const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
   const colors = [
     '#ff4d4f', '#ff7875', '#ffa39e', '#ffccc7', '#fff1f0',
-    '#ffd666', '#ffc53d', '#fadb14', // 添加金色
-    '#95de64', '#73d13d', '#389e0d', // 添加绿色
-    '#40a9ff', '#1890ff', '#096dd9'  // 添加蓝色
+    '#ffd666', '#ffc53d', '#fadb14', /* 金色 */
+    '#95de64', '#73d13d', '#389e0d', /* 绿色 */
+    '#40a9ff', '#1890ff', '#096dd9'  /* 蓝色 */
   ]
+  
+  // 随机决定是从左边还是右边发射
+  const isLeft = n % 2 === 0
+  const side = isLeft ? 'left' : 'right'
   
   // 返回随机样式属性
   return {
-    '--rotation': `${rand(0, 360)}deg`,
-    '--animation-delay': `${(n * 0.05)}s`,  // 减小延迟
+    '--rotation': `${rand(-30, 30)}deg`,
+    '--animation-delay': `${(n * 0.05)}s`, /* 减小延迟使彩花更密集 */
     '--hue': colors[Math.floor(Math.random() * colors.length)],
-    '--fall-delay': `${rand(1, 3)}s`,  // 减小延迟
-    left: `${rand(0, 100)}%`,
-    top: `-50px`,  // 调整起始位置
-    width: `${rand(8, 12)}px`,  // 随机宽度
-    height: `${rand(16, 24)}px`  // 随机高度
+    '--throw-height': `${rand(-500, -800)}px`, /* 增加抛洒高度 */
+    '--throw-distance': isLeft ? `${rand(800, 1200)}px` : `${rand(-1200, -800)}px`, /* 增加水平距离 */
+    [side]: '0%', /* 从屏幕边缘开始 */
+    bottom: `${rand(-50, 200)}px`, /* 增加起始位置的随机性 */
+    width: `${rand(15, 25)}px`, /* 彩花尺寸 */
+    height: `${rand(30, 50)}px` /* 彩花尺寸 */
   }
 }
 
@@ -642,7 +647,7 @@ onBeforeUnmount(() => {
 /* header图片样式 */
 .header-image {
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
   height: auto;
   margin-bottom: 40px;
 }
@@ -667,7 +672,7 @@ onBeforeUnmount(() => {
 /* footer图片样式 */
 .footer-image {
   width: 100%;
-  max-width: 600px;
+  max-width: 800px;
   height: auto;
   margin-top: 20px;
 }
@@ -731,7 +736,7 @@ onBeforeUnmount(() => {
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 9999999 !important; /* 设置一个非常高的z-index */
+  z-index: 9999999 !important;
 }
 
 .confetti {
@@ -740,36 +745,34 @@ onBeforeUnmount(() => {
   width: var(--width);
   height: var(--height);
   transform: rotate(var(--rotation));
-  opacity: 1;  /* 修改初始透明度 */
-  animation: confetti-fall var(--fall-delay) linear infinite,
-             confetti-shake 3s ease-in-out infinite;
+  opacity: 0;
+  animation: confetti-throw 3s cubic-bezier(0.05, 0.95, 0.35, 0.95) infinite; /* 增加动画时长 */
   animation-delay: var(--animation-delay);
-  border-radius: 2px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  border-radius: 4px; /* 增加圆角 */
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3); /* 增强阴影 */
 }
 
-@keyframes confetti-fall {
+@keyframes confetti-throw {
   0% {
     opacity: 1;
-    top: -10%;
-    transform: translateY(0) rotate(var(--rotation));
+    transform: 
+      translateX(0)
+      translateY(0)
+      rotate(var(--rotation));
+  }
+  35% { /* 提前到达最高点 */
+    opacity: 1;
+    transform: 
+      translateX(var(--throw-distance))
+      translateY(var(--throw-height))
+      rotate(calc(var(--rotation) + 180deg));
   }
   100% {
-    opacity: 1;
-    top: 110%;
-    transform: translateY(0) rotate(calc(var(--rotation) + 360deg));
-  }
-}
-
-@keyframes confetti-shake {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(30px);
-  }
-  75% {
-    transform: translateX(-30px);
+    opacity: 0;
+    transform: 
+      translateX(var(--throw-distance))
+      translateY(calc(var(--throw-height) * -0.2)) /* 调整落点高度，使其落得更慢 */
+      rotate(calc(var(--rotation) + 360deg));
   }
 }
 
