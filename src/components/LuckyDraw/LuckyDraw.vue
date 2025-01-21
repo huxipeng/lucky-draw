@@ -245,7 +245,7 @@ const startRollingPrize = () => {
   }, 50)
 
   // 自动停止
-  const randomDuration = 3000 + Math.random() * 2000
+  const randomDuration = 1000 + Math.random() * 2000
   autoStopTimer = setTimeout(() => {
     if (isDrawing.value) {
       handleDraw()
@@ -348,8 +348,8 @@ const startRollingName = () => {
     currentRollingName.value = participants[randomIndex].name
   }, 50) // 50ms的间隔确保动画流畅
 
-  // 设置随机的自动停止时间(3-5秒之间)
-  const randomDuration = 3000 + Math.random() * 2000
+  // 设置随机的自动停止时间(1-3秒之间)
+  const randomDuration = 1000 + Math.random() * 2000
   // 设置自动停止定时器
   autoStopTimer = setTimeout(() => {
     // 如果还在抽奖中,则触发停止
