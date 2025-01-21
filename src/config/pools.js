@@ -97,14 +97,12 @@ export const specialRewardPools = [
 export const annualAwardPool = {
   name: '年终大奖池',
   participants: [
-    '奚泳利',
     '黄建清',
     '李存考',
     '黄建平',
     '胡希鹏',
     '沈晓伟',
     '冯旭阳',
-    '傅宇成',
     '杨梦',
     '余燕双',
     '任道艳',
@@ -112,13 +110,12 @@ export const annualAwardPool = {
     '姚杰',
     '李茜茜',
     '华云芳',
-    '郑华',
-    '王伟龙',
-    '朱宏林',
     '余凯宁',
-    '雷锦',
     '吴丽亮',
-    '韩建锋'
+    '韩建锋',
+    '李梦秋', 
+    '陈兴',
+    '奚泳利'
   ]
 }
 

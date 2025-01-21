@@ -393,8 +393,13 @@ const stopDraw = () => {
   baseSpeed = 0.02
   
   // 从年终大奖池中随机抽取获奖者
+  annualAwardPool.participants.sort(() => Math.random() - 0.5)
+  console.log('annualAwardPool.participants', annualAwardPool.participants)
+
   const random = Math.random() * annualAwardPool.participants.length
   const randomIndex = Math.floor(random)
+
+  console.log('randomIndex', randomIndex)
   winner.value = annualAwardPool.participants[randomIndex]
   showResult.value = true
 }
