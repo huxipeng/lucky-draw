@@ -77,6 +77,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { participants } from '@/config/participants'
+import { annualAwardPool } from '@/config/pools'  // 导入年终大奖池
 
 const router = useRouter()
 const tagCloudContainer = ref(null)
@@ -324,8 +325,9 @@ const stopDraw = () => {
   countdown.value = 10
   tspeed = 5
   baseSpeed = 0.05
-  const randomIndex = Math.floor(Math.random() * participants.length)
-  winner.value = participants[randomIndex].name
+  // 从年终大奖池中随机抽取获奖者
+  const randomIndex = Math.floor(Math.random() * annualAwardPool.participants.length)
+  winner.value = annualAwardPool.participants[randomIndex]
   showResult.value = true
 }
 
@@ -352,6 +354,7 @@ const getConfettiStyle = (n) => {
 }
 
 onMounted(() => {
+  // 展示效果仍然使用所有参与者
   participants.forEach(person => {
     const span = document.createElement('span')
     span.textContent = person.name

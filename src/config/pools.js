@@ -103,6 +103,17 @@ export const specialRewardPools = [
   }
 ]
 
+// 年终大奖候选人名单
+export const annualAwardPool = {
+  name: '年终大奖池',
+  participants: [
+    // 这里填写实际参与年终大奖抽奖的人员名单
+    '张三',
+    '李四',
+    '王五'
+  ]
+}
+
 // 工具函数：根据概率数组随机选择一个数量
 export function getRandomCountByProbability(probabilities) {
   const random = Math.random()
