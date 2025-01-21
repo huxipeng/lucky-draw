@@ -54,20 +54,21 @@
               :footer="null"
               :maskClosable="false"
               centered
-              width="600px"
+              width="800px"
               class="result-modal"
             >
               <div class="result-content">
+                <!-- 使用新的header图片 -->
                 <div class="result-header">
-                  <div class="crown">👑</div>
-                  <div class="congratulations">恭喜中奖</div>
+                  <img src="@/assets/spec-draw-header.png" alt="年终大奖" class="header-image"/>
                 </div>
+                <!-- 获奖者信息 -->
                 <div class="winner-info">
-                  <div class="winner-avatar">{{ winner.charAt(0) }}</div>
-                  <div class="winner-name">{{ winner }}</div>
+                  <div class="winner-text">恭喜 <span class="winner-name">{{ winner }}</span> 获得年终大奖</div>
                 </div>
+                <!-- 使用新的footer图片 -->
                 <div class="result-footer">
-                  <div class="sparkles">✨ 年终大奖 ✨</div>
+                  <img src="@/assets/spec-draw-footer.png" alt="奖品信息" class="footer-image"/>
                 </div>
               </div>
             </a-modal>
@@ -609,14 +610,11 @@ onBeforeUnmount(() => {
 }
 
 .result-modal :deep(.ant-modal-content) {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 245, 245, 0.8) 100%);
-  backdrop-filter: blur(15px);
-  border-radius: 30px;
-  box-shadow: 0 25px 80px rgba(255, 77, 79, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.5);
+  background: #fff;
+  border-radius: 20px;
   overflow: hidden;
   position: relative;
-  z-index: 10000;
+  padding: 0;
 }
 
 .result-modal :deep(.ant-modal-body) {
@@ -624,198 +622,45 @@ onBeforeUnmount(() => {
 }
 
 .result-content {
-  padding: 60px 40px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  animation: content-show 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 添加装饰性背景 */
-.result-content::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 20%, rgba(255, 77, 79, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(255, 215, 0, 0.1) 0%, transparent 50%);
-  z-index: -1;
-}
-
-/* 添加动态光效 */
-.result-content::after {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  right: -50%;
-  bottom: -50%;
-  background: linear-gradient(
-    45deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.2) 50%,
-    transparent 100%
-  );
-  animation: light-sweep 3s ease-in-out infinite;
-  transform: rotate(45deg);
-  z-index: -1;
-}
-
-.result-header {
-  margin-bottom: 40px;
-  position: relative;
-}
-
-/* 添加装饰性边框 */
-.result-header::before,
-.result-header::after {
-  content: '';
-  position: absolute;
-  width: 100px;
-  height: 100px;
-  border: 3px solid rgba(255, 77, 79, 0.3);
-  border-radius: 20px;
-  z-index: -1;
-}
-
-.result-header::before {
-  top: -20px;
-  left: -20px;
-  border-right: none;
-  border-bottom: none;
-}
-
-.result-header::after {
-  bottom: -20px;
-  right: -20px;
-  border-left: none;
-  border-top: none;
-}
-
-.crown {
-  font-size: 100px;
-  margin-bottom: 30px;
-  animation: crown-float 3s ease-in-out infinite;
-  text-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
-  position: relative;
-  display: inline-block;
-}
-
-/* 添加皇冠光环效果 */
-.crown::before {
-  content: '';
-  position: absolute;
-  width: 120px;
-  height: 120px;
-  background: radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, transparent 70%);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  z-index: -1;
-  animation: crown-glow 2s ease-in-out infinite;
-}
-
-.congratulations {
-  font-size: 56px;
-  font-weight: bold;
-  background: linear-gradient(45deg, #ff4d4f, #ffd666);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 4px 4px 20px rgba(255, 77, 79, 0.3);
-  letter-spacing: 8px;
-  margin-bottom: 30px;
-  animation: text-glow 2s ease-in-out infinite;
-  position: relative;
-}
-
-.winner-info {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30px;
-  margin: 50px 0;
+  padding: 30px;
+  text-align: center;
   position: relative;
-  padding: 40px 0;
 }
 
-/* 添加装饰性圆圈 */
-.winner-info::before {
-  content: '';
-  position: absolute;
-  width: 300px;
-  height: 300px;
-  border: 2px dashed rgba(255, 77, 79, 0.2);
-  border-radius: 50%;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation: rotate 20s linear infinite;
+/* header图片样式 */
+.header-image {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  margin-bottom: 40px;
 }
 
-.winner-avatar {
-  width: 180px;
-  height: 180px;
-  border-radius: 90px;
-  background: linear-gradient(135deg, #ff4d4f, #ff7875);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 72px;
-  color: white;
+/* 获奖者信息样式 */
+.winner-info {
+  margin: 40px 0;
+}
+
+.winner-text {
+  font-size: 36px;
+  color: #333;
   font-weight: bold;
-  box-shadow: 0 15px 40px rgba(255, 77, 79, 0.4),
-              inset 0 0 20px rgba(255, 255, 255, 0.4);
-  animation: winner-pulse 2s ease-in-out infinite;
-  border: 4px solid rgba(255, 255, 255, 0.8);
-  position: relative;
-  z-index: 1;
-}
-
-/* 添加头像光环效果 */
-.winner-avatar::before {
-  content: '';
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  background: radial-gradient(circle, rgba(255, 77, 79, 0.2) 0%, transparent 70%);
-  border-radius: 50%;
-  z-index: -1;
-  animation: avatar-glow 2s ease-in-out infinite;
 }
 
 .winner-name {
-  font-size: 64px;
-  font-weight: bold;
-  background: linear-gradient(45deg, #ff4d4f, #ff7875);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 4px 12px rgba(255, 77, 79, 0.3);
-  letter-spacing: 4px;
-  animation: name-float 3s ease-in-out infinite;
-  position: relative;
+  color: #ff4d4f;
+  font-size: 40px;
+  margin: 0 10px;
 }
 
-.result-footer {
-  margin-top: 40px;
-  position: relative;
-  padding: 20px 0;
-}
-
-.sparkles {
-  font-size: 36px;
-  font-weight: bold;
-  background: linear-gradient(45deg, #ff4d4f, #ffd666);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 20px rgba(255, 77, 79, 0.4);
-  animation: sparkle-pulse 2s ease-in-out infinite;
-  letter-spacing: 4px;
-  position: relative;
-  display: inline-block;
+/* footer图片样式 */
+.footer-image {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  margin-top: 20px;
 }
 
 .countdown-container {
@@ -869,66 +714,6 @@ onBeforeUnmount(() => {
   }
 }
 
-@keyframes crown-float {
-  0%, 100% {
-    transform: translateY(0) rotate(0);
-  }
-  50% {
-    transform: translateY(-10px) rotate(5deg);
-  }
-}
-
-@keyframes text-glow {
-  0%, 100% {
-    text-shadow: 0 0 20px rgba(255, 77, 79, 0.3);
-  }
-  50% {
-    text-shadow: 0 0 30px rgba(255, 77, 79, 0.6);
-  }
-}
-
-@keyframes winner-pulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 15px 40px rgba(255, 77, 79, 0.4);
-  }
-  50% {
-    transform: scale(1.05);
-    box-shadow: 0 20px 50px rgba(255, 77, 79, 0.6);
-  }
-}
-
-@keyframes circle-expand {
-  0% {
-    transform: scale(0.8);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1.2);
-    opacity: 0;
-  }
-}
-
-@keyframes name-float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-}
-
-@keyframes sparkle-pulse {
-  0%, 100% {
-    opacity: 0.9;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.1);
-  }
-}
-
 /* 修改彩花样式 */
 .confetti-container {
   position: fixed;
@@ -976,47 +761,6 @@ onBeforeUnmount(() => {
   }
   75% {
     transform: translateX(-30px);
-  }
-}
-
-/* 添加新的动画关键帧 */
-@keyframes light-sweep {
-  0% {
-    transform: rotate(45deg) translateX(-100%);
-  }
-  100% {
-    transform: rotate(45deg) translateX(100%);
-  }
-}
-
-@keyframes crown-glow {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0.5;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 0.8;
-  }
-}
-
-@keyframes avatar-glow {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.5;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 0.8;
-  }
-}
-
-@keyframes rotate {
-  from {
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-  to {
-    transform: translate(-50%, -50%) rotate(360deg);
   }
 }
 
