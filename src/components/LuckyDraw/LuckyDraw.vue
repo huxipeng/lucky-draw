@@ -514,7 +514,7 @@ onUnmounted(() => {
 }
 
 .candidate-item.highlight {
-  color: #fff;
+  color: #ffffff;
   background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
   transform: scale(1.08);
   box-shadow: 0 4px 12px rgba(255, 77, 79, 0.2);
@@ -523,7 +523,7 @@ onUnmounted(() => {
 }
 
 .candidate-item.active {
-  color: #fff;
+  color: #ffffff;
   background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
   transform: scale(1.08);
   box-shadow: 0 4px 12px rgba(255, 77, 79, 0.2);
