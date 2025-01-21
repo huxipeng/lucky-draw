@@ -209,7 +209,7 @@ const positionAll = () => {
 
 const doPosition = () => {
   let l = oDiv.offsetWidth / 2
-  let t = oDiv.offsetHeight / 2 - 50
+  let t = oDiv.offsetHeight / 2 - 40
 
   for (let i = 0; i < mcList.length; i++) {
     if (mcList[i].alpha > 0.1) {
@@ -410,7 +410,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   padding: 0;
   min-height: calc(100vh - 120px);
-  transform: translateY(-50px);
+  transform: translateY(-40px);
 }
 
 .tag-cloud-container span {
