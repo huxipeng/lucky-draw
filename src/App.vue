@@ -4,7 +4,7 @@
       <a-layout-header class="header">
         <div class="header-content">
           <h1>
-            <span class="event-name">2024年承信&目光年会</span>
+            <span class="event-name">2025年承信&目光迎新年会</span>
           </h1>
           <div 
             class="header-fullscreen-btn"

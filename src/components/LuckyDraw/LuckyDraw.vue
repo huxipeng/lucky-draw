@@ -135,7 +135,7 @@
           <a-table 
             :dataSource="store.winners" 
             :columns="columns" 
-            :pagination="{ pageSize: 10 }"
+            :pagination="{ pageSize: 20 }"
             size="middle"
           />
         </a-card>
