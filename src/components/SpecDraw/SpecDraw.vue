@@ -528,7 +528,7 @@ onBeforeUnmount(() => {
 .tag-cloud-container {
   flex: 1;
   position: relative;
-  color: #ff4d4f;
+  color: #9c27b0;  /* 修改为淡紫色 */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -540,18 +540,18 @@ onBeforeUnmount(() => {
 }
 
 .tag-cloud-container span {
-  color: #ff4d4f;
+  color: #9c27b0;  /* 修改为淡紫色 */
   font-weight: bold;
   transition: all 0.3s ease;
   position: absolute;
-  text-shadow: 2px 2px 8px rgba(255, 77, 79, 0.3);
+  text-shadow: 2px 2px 8px rgba(156, 39, 176, 0.2);  /* 修改阴影颜色为淡紫色 */
   font-size: 24px !important;
   pointer-events: auto;
 }
 
 .tag-cloud-container span:hover {
-  color: #ff7875;
-  text-shadow: 4px 4px 12px rgba(255, 77, 79, 0.5);
+  color: #7b1fa2;  /* 修改悬停颜色为更深的淡紫色 */
+  text-shadow: 4px 4px 12px rgba(156, 39, 176, 0.3);  /* 修改悬停阴影为淡紫色 */
   transform: scale(1.2);
 }
 
