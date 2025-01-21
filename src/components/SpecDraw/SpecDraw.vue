@@ -25,6 +25,12 @@
           <!-- 抽奖主区域 -->
           <div class="draw-main">
             <div ref="tagCloudContainer" class="tag-cloud-container"></div>
+            
+            <!-- 倒计时动画 -->
+            <div v-if="showCountdown" class="countdown-container">
+              <div class="countdown-number">{{ countdown }}</div>
+            </div>
+
             <!-- 中奖结果 -->
             <a-modal
               v-model:visible="showResult"
@@ -56,6 +62,8 @@ const tagCloudContainer = ref(null)
 const isDrawing = ref(false)
 const showResult = ref(false)
 const winner = ref('')
+const showCountdown = ref(false)
+const countdown = ref(5)
 let radius = 350
 let dtr = Math.PI/180
 let d = 500
@@ -271,9 +279,18 @@ const startDraw = () => {
   tspeed = 15
   baseSpeed = 0.2
 
-  drawTimer = setTimeout(() => {
-    stopDraw()
-  }, 10000)
+  // 5秒后开始倒计时
+  setTimeout(() => {
+    showCountdown.value = true
+    const countdownInterval = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(countdownInterval)
+        showCountdown.value = false
+        stopDraw()
+      }
+    }, 1000)
+  }, 5000)
 }
 
 const stopDraw = () => {
@@ -475,5 +492,42 @@ onBeforeUnmount(() => {
   font-size: 24px;
   text-align: center;
   color: #ff4d4f;
+}
+
+.countdown-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.countdown-number {
+  font-size: 200px;
+  font-weight: bold;
+  color: #ff4d4f;
+  text-shadow: 0 0 20px rgba(255, 77, 79, 0.8);
+  animation: countdown-animation 1s ease-in-out infinite;
+}
+
+@keyframes countdown-animation {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
 }
 </style>
