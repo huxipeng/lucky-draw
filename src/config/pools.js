@@ -3,8 +3,8 @@ export const defaultPunishmentPool = {
   name: '默认惩罚池',
   // 抽取数量的概率配置
   drawCountProbability: [
-    { count: 0, probability: 0.5 },
-    { count: 1, probability: 0.5 }
+    { count: 0, probability: 0.7 },
+    { count: 1, probability: 0.3 }
   ],
   // 惩罚项目
   items: [
