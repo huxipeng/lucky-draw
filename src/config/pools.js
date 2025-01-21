@@ -3,25 +3,14 @@ export const defaultPunishmentPool = {
   name: '默认惩罚池',
   // 抽取数量的概率配置
   drawCountProbability: [
-    { count: 0, probability: 0.3 },
-    { count: 1, probability: 0.3 },
-    { count: 2, probability: 0.3 },
-    { count: 3, probability: 0.1 }
+    { count: 0, probability: 0.5 },
+    { count: 1, probability: 0.5 }
   ],
   // 惩罚项目
   items: [
-    { id: 'p1', name: '唱一首歌' },
-    { id: 'p2', name: '跳一段舞' },
-    { id: 'p3', name: '讲一个笑话' },
-    { id: 'p4', name: '做一个鬼脸' },
-    { id: 'p5', name: '俯卧撑10个' },
-    { id: 'p6', name: '仰卧起坐20个' },
-    { id: 'p7', name: '深蹲15个' },
-    { id: 'p8', name: '原地跳绳30下' },
-    { id: 'p9', name: '给大家讲一个工作趣事' },
-    { id: 'p10', name: '模仿一个电影桥段' },
-    { id: 'p11', name: '用方言说一句话' },
-    { id: 'p12', name: '即兴演讲一分钟' }
+    { id: 'p1', name: '读绕口令【施氏食狮子】' },
+    { id: 'p2', name: '找6个人口撕纸巾并传递下去' },
+    { id: 'p3', name: '大家都别活了，和坐位左右两边的人干一杯' }
   ]
 }
 
@@ -29,36 +18,32 @@ export const defaultPunishmentPool = {
 export const specialPunishmentPools = [
   {
     id: 'special1',
-    name: '领导专属惩罚池',
+    name: '惩罚池1',
     // 指定使用这个惩罚池的人员名单
-    participants: ['奚泳利', '黄建清', '李存考'],
+    participants: ['陈兴'],
     // 抽取数量的概率配置
     drawCountProbability: [
-      { count: 0, probability: 0.4 },
-      { count: 1, probability: 0.4 },
-      { count: 2, probability: 0.2 }
+      { count: 1, probability: 1 }
     ],
     // 惩罚项目
     items: [
-      { id: 'sp1-1', name: '给团队成员发红包' },
-      { id: 'sp1-2', name: '请大家喝咖啡' },
-      { id: 'sp1-3', name: '分享一个管理经验' },
-      { id: 'sp1-4', name: '给团队讲一个笑话' }
+      { id: 'sp1-1', name: '去找会场外的陌生人讨1根烟回来给奚老板' }
     ]
   },
   {
     id: 'special2',
-    name: '新员工惩罚池',
-    participants: ['周科', '梁世辉', '栾兴华'],
+    name: '惩罚池2',
+    // 指定使用这个惩罚池的人员名单
+    participants: ['陈兴'],
+    // 抽取数量的概率配置
     drawCountProbability: [
-      { count: 1, probability: 0.6 },
-      { count: 2, probability: 0.4 }
+      { count: 0, probability: 0 },
+      { count: 1, probability: 1 },
+      { count: 2, probability: 0.2 }
     ],
+    // 惩罚项目
     items: [
-      { id: 'sp2-1', name: '分享入职感受' },
-      { id: 'sp2-2', name: '展示一个特长' },
-      { id: 'sp2-3', name: '介绍家乡特产' },
-      { id: 'sp2-4', name: '表演才艺' }
+      { id: 'sp1-1', name: '去找会场外的陌生人讨1根烟回来给奚老板' }
     ]
   }
 ]

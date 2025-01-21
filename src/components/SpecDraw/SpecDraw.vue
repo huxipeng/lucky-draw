@@ -84,52 +84,68 @@ import { useRouter } from 'vue-router'
 import { participants } from '@/config/participants'
 import { annualAwardPool } from '@/config/pools'  // 导入年终大奖池
 
+// 路由实例
 const router = useRouter()
-const tagCloudContainer = ref(null)
-const isDrawing = ref(false)
-const showResult = ref(false)
-const winner = ref('')
-const showCountdown = ref(false)
-const countdown = ref(10)
-const showStartAnimation = ref(false)
-let radius = 350
-let dtr = Math.PI/180
-let d = 500
-let mcList = []
-let active = false
-let lasta = 1
-let lastb = 1
-let distr = true
-let tspeed = 2
-let baseSpeed = 0.02
-let size = 450
-let mouseX = 0
-let mouseY = 0
-let howElliptical = 1
-let aA = null
-let oDiv = null
-let sa = 0
-let ca = 0
-let sb = 0
-let cb = 0
-let sc = 0
-let cc = 0
-let intervalId = null
-let autoRotateInterval = null
-let rotationX = 0
-let rotationY = 0
-let rotationZ = 0
-let rotationDirection = { x: 1, y: 1, z: 1 }
-let drawTimer = null
 
+// 响应式状态变量
+const tagCloudContainer = ref(null)      // 3D标签云容器引用
+const isDrawing = ref(false)             // 是否正在抽奖
+const showResult = ref(false)            // 是否显示结果弹窗
+const winner = ref('')                   // 中奖者姓名
+const showCountdown = ref(false)         // 是否显示倒计时
+const countdown = ref(10)                // 倒计时数值
+const showStartAnimation = ref(false)    // 是否显示开始动画
+
+// 3D球体相关参数
+let radius = 350                         // 球体半径
+let dtr = Math.PI/180                    // 角度转弧度系数
+let d = 500                             // 视距
+let mcList = []                         // 存储标签位置信息的数组
+let active = false                      // 是否处于鼠标操控状态
+let lasta = 1                           // 上一次的水平旋转角度
+let lastb = 1                           // 上一次的垂直旋转角度
+let distr = true                        // 是否均匀分布标签
+let tspeed = 2                          // 旋转速度
+let baseSpeed = 0.02                    // 基础旋转速度
+let size = 450                          // 球体大小
+let mouseX = 0                          // 鼠标X坐标
+let mouseY = 0                          // 鼠标Y坐标
+let howElliptical = 1                   // 球体椭圆度
+
+// DOM元素引用
+let aA = null                           // 存储所有标签元素的数组
+let oDiv = null                         // 标签云容器DOM元素
+
+// 旋转计算相关变量
+let sa = 0                              // sin(a)
+let ca = 0                              // cos(a)
+let sb = 0                              // sin(b)
+let cb = 0                              // cos(b)
+let sc = 0                              // sin(c)
+let cc = 0                              // cos(c)
+
+// 定时器引用
+let intervalId = null                   // 更新位置的定时器
+let autoRotateInterval = null           // 自动旋转的定时器
+let drawTimer = null                    // 抽奖动画定时器
+
+// 旋转状态
+let rotationX = 0                       // X轴旋转角度
+let rotationY = 0                       // Y轴旋转角度
+let rotationZ = 0                       // Z轴旋转角度
+let rotationDirection = { x: 1, y: 1, z: 1 }  // 旋转方向
+
+// 跳转到普通抽奖页面
 const goToLuckyDraw = () => {
   router.push('/')
 }
 
+// 更新3D球体的位置和状态
 const update = () => {
   let a
   let b
 
+  // 根据是否处于鼠标控制状态计算旋转角度
   if (active) {
     a = (-Math.min(Math.max(-mouseY, -size), size) / radius) * tspeed
     b = (Math.min(Math.max(-mouseX, -size), size) / radius) * tspeed
@@ -143,44 +159,66 @@ const update = () => {
 
   sineCosine(a, b, 0)
 
+  // 更新每个标签的3D位置
   for (let j = 0; j < mcList.length; j++) {
+    // 第一次旋转变换
     let rx1 = mcList[j].cx
     let ry1 = mcList[j].cy * ca + mcList[j].cz * (-sa)
     let rz1 = mcList[j].cy * sa + mcList[j].cz * ca
 
+    // 第二次旋转变换
     let rx2 = rx1 * cb + rz1 * sb
     let ry2 = ry1
     let rz2 = rx1 * (-sb) + rz1 * cb
 
+    // 第三次旋转变换
     let rx3 = rx2 * cc + ry2 * (-sc)
     let ry3 = rx2 * sc + ry2 * cc
     let rz3 = rz2
 
+    // 更新标签的3D坐标
     mcList[j].cx = rx3
     mcList[j].cy = ry3
     mcList[j].cz = rz3
 
+    // 计算透视效果
     let per = d / (d + rz3)
 
+    // 更新标签的2D投影位置和缩放比例
     mcList[j].x = (howElliptical * rx3 * per) - (howElliptical * 2)
     mcList[j].y = ry3 * per
     mcList[j].scale = per
     mcList[j].alpha = per
 
+    // 调整透明度
     mcList[j].alpha = (mcList[j].alpha - 0.6) * (10/6)
   }
 
+  // 更新DOM位置并进行深度排序
   doPosition()
   depthSort()
 }
 
+// 计算三角函数值
+const sineCosine = (a, b, c) => {
+  sa = Math.sin(a * dtr)
+  ca = Math.cos(a * dtr)
+  sb = Math.sin(b * dtr)
+  cb = Math.cos(b * dtr)
+  sc = Math.sin(c * dtr)
+  cc = Math.cos(c * dtr)
+}
+
+// 根据Z轴深度对标签进行排序
 const depthSort = () => {
   let aTmp = []
 
+  // 复制标签数组
   for (let i=0; i<aA.length; i++) {
     aTmp.push(aA[i])
   }
 
+  // 根据z坐标进行排序
   aTmp.sort(function (vItem1, vItem2) {
     if (vItem1.cz > vItem2.cz) {
       return -1
@@ -191,17 +229,20 @@ const depthSort = () => {
     }
   })
 
+  // 更新标签的z-index
   for (let i=0; i<aTmp.length; i++) {
     aTmp[i].style.zIndex = i
   }
 }
 
+// 初始化标签的3D位置
 const positionAll = () => {
   let phi = 0
   let theta = 0
   let max = mcList.length
   let i = 0
 
+  // 随机打乱标签顺序
   let aTmp = []
   let oFragment = document.createDocumentFragment()
   
@@ -219,25 +260,31 @@ const positionAll = () => {
   
   oDiv.appendChild(oFragment)
 
+  // 计算每个标签的3D坐标
   for (let i = 1; i < max + 1; i++) {
     if (distr) {
+      // 均匀分布在球面上
       phi = Math.acos(-1 + (2 * i - 1) / max)
       theta = Math.sqrt(max * Math.PI) * phi
     } else {
+      // 随机分布在球面上
       phi = Math.random() * (Math.PI)
       theta = Math.random() * (2 * Math.PI)
     }
 
+    // 将球面坐标转换为笛卡尔坐标
     mcList[i - 1].cx = radius * Math.cos(theta) * Math.sin(phi)
     mcList[i - 1].cy = radius * Math.sin(theta) * Math.sin(phi)
     mcList[i - 1].cz = radius * Math.cos(phi)
   }
 }
 
+// 更新标签的DOM位置
 const doPosition = () => {
   let l = oDiv.offsetWidth / 2
   let t = oDiv.offsetHeight / 2 - 40
 
+  // 更新每个标签的位置和样式
   for (let i = 0; i < mcList.length; i++) {
     if (mcList[i].alpha > 0.1) {
       let item = aA[i]
@@ -252,19 +299,13 @@ const doPosition = () => {
   }
 }
 
-const sineCosine = (a, b, c) => {
-  sa = Math.sin(a * dtr)
-  ca = Math.cos(a * dtr)
-  sb = Math.sin(b * dtr)
-  cb = Math.cos(b * dtr)
-  sc = Math.sin(c * dtr)
-  cc = Math.cos(c * dtr)
-}
-
+// 初始化标签云
 const initTags = () => {
+  // 获取DOM元素
   oDiv = tagCloudContainer.value
   aA = oDiv.getElementsByTagName('span')
 
+  // 初始化标签位置信息
   for (let i = 0; i < aA.length; i++) {
     mcList.push({
       cx: 0,
@@ -277,9 +318,11 @@ const initTags = () => {
     })
   }
 
+  // 初始化三角函数值和位置
   sineCosine(0, 0, 0)
   positionAll()
   
+  // 添加鼠标事件监听
   oDiv.onmouseover = () => {
     active = true
   }
@@ -296,13 +339,19 @@ const initTags = () => {
     mouseY /= 5
   }
 
+  // 启动位置更新定时器
   if (intervalId) {
     clearInterval(intervalId)
   }
   intervalId = setInterval(update, 30)
 }
 
+// 开始抽奖流程
 const startDraw = () => {
+  // 防止重复点击
+  if (isDrawing.value) return
+  isDrawing.value = true
+  
   // 显示开始动画
   showStartAnimation.value = true
   
@@ -316,7 +365,7 @@ const startDraw = () => {
     isDrawing.value = true
     tspeed = 15
     baseSpeed = 0.2
-
+    
     // 5秒后开始倒计时
     setTimeout(() => {
       showCountdown.value = true
@@ -332,22 +381,22 @@ const startDraw = () => {
   }, 5000)
 }
 
+// 停止抽奖并显示结果
 const stopDraw = () => {
   isDrawing.value = false
   showCountdown.value = false
   countdown.value = 10
   tspeed = 2
   baseSpeed = 0.02
+  
   // 从年终大奖池中随机抽取获奖者
   const random = Math.random() * annualAwardPool.participants.length
-  console.log('random', random)
   const randomIndex = Math.floor(random)
-  console.log(randomIndex)
   winner.value = annualAwardPool.participants[randomIndex]
   showResult.value = true
 }
 
-// 修改彩花生成函数
+// 生成彩花样式
 const getConfettiStyle = (n) => {
   const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
   const colors = [
@@ -357,6 +406,7 @@ const getConfettiStyle = (n) => {
     '#40a9ff', '#1890ff', '#096dd9'  // 添加蓝色
   ]
   
+  // 返回随机样式属性
   return {
     '--rotation': `${rand(0, 360)}deg`,
     '--animation-delay': `${(n * 0.05)}s`,  // 减小延迟
@@ -369,6 +419,7 @@ const getConfettiStyle = (n) => {
   }
 }
 
+// 组件挂载时的初始化
 onMounted(() => {
   // 展示效果仍然使用所有参与者
   participants.forEach(person => {
@@ -382,7 +433,9 @@ onMounted(() => {
   initTags()
 })
 
+// 组件卸载时的清理
 onBeforeUnmount(() => {
+  // 清除所有定时器
   if (intervalId) {
     clearInterval(intervalId)
   }
