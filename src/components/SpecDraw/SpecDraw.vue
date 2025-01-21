@@ -1,13 +1,15 @@
 <template>
+  <!-- 添加彩花容器到body -->
+  <teleport to="body">
+    <div v-if="showResult" class="confetti-container">
+      <div v-for="n in 100" :key="n" class="confetti" :style="getConfettiStyle(n)"></div>
+    </div>
+  </teleport>
+  
   <div class="spec-draw">
     <!-- 添加开始动画 -->
     <div v-if="showStartAnimation" class="start-animation-container">
       <div class="start-text">即将开始</div>
-    </div>
-    
-    <!-- 添加彩花容器到最外层 -->
-    <div v-if="showResult" class="confetti-container">
-      <div v-for="n in 100" :key="n" class="confetti" :style="getConfettiStyle(n)"></div>
     </div>
     
     <a-row :gutter="[16, 16]" class="draw-container">
@@ -609,16 +611,23 @@ onBeforeUnmount(() => {
   transform: scale(1.2);
 }
 
-.result-modal :deep(.ant-modal-content) {
-  background: #fff;
-  border-radius: 20px;
-  overflow: hidden;
-  position: relative;
-  padding: 0;
-}
+.result-modal {
+  :deep(.ant-modal-wrap),
+  :deep(.ant-modal-mask) {
+    z-index: 1900;  /* 弹窗遮罩层级 */
+  }
+  
+  :deep(.ant-modal) {
+    z-index: 1900;  /* 弹窗本身层级 */
+  }
 
-.result-modal :deep(.ant-modal-body) {
-  padding: 0;
+  :deep(.ant-modal-content) {
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    padding: 0;
+  }
 }
 
 .result-content {
@@ -722,7 +731,7 @@ onBeforeUnmount(() => {
   width: 100vw;
   height: 100vh;
   pointer-events: none;
-  z-index: 100001;  /* 提高层级 */
+  z-index: 9999999 !important; /* 设置一个非常高的z-index */
 }
 
 .confetti {
