@@ -66,9 +66,9 @@ const tagCloudContainer = ref(null)
 const isDrawing = ref(false)
 const showResult = ref(false)
 const winner = ref('')
-let radius = 250
+let radius = 350
 let dtr = Math.PI/180
-let d = 400
+let d = 500
 let mcList = []
 let active = false
 let lasta = 1
@@ -76,7 +76,7 @@ let lastb = 1
 let distr = true
 let tspeed = 5
 let baseSpeed = 0.05
-let size = 350
+let size = 450
 let mouseX = 0
 let mouseY = 0
 let howElliptical = 1
@@ -216,7 +216,7 @@ const doPosition = () => {
       let item = aA[i]
       item.style.left = mcList[i].cx + l - item.offsetWidth/2 + 'px'
       item.style.top = mcList[i].cy + t - item.offsetHeight/2 + 'px'
-      item.style.fontSize = Math.ceil(16 * mcList[i].scale/2) + 12 + 'px'
+      item.style.fontSize = Math.ceil(18 * mcList[i].scale/2) + 12 + 'px'
       item.style.opacity = mcList[i].alpha
     } else {
       let item = aA[i]
@@ -347,7 +347,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 12px 24px;
+  padding: 6px 24px;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
@@ -397,6 +397,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  padding-bottom: 40px;
 }
 
 .tag-cloud-container {
@@ -404,10 +405,10 @@ onBeforeUnmount(() => {
   position: relative;
   color: #ff4d4f;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 40px;
-  min-height: calc(100vh - 150px);
+  padding: 80px 20px 20px;
+  min-height: calc(100vh - 120px);
 }
 
 .tag-cloud-container span {
@@ -415,14 +416,14 @@ onBeforeUnmount(() => {
   font-weight: bold;
   transition: all 0.3s ease;
   position: absolute;
-  text-shadow: 1px 1px 5px rgba(255, 77, 79, 0.2);
-  font-size: 28px !important;
+  text-shadow: 2px 2px 8px rgba(255, 77, 79, 0.3);
+  font-size: 24px !important;
 }
 
 .tag-cloud-container span:hover {
   color: #ff7875;
-  text-shadow: 2px 2px 8px rgba(255, 77, 79, 0.4);
-  transform: scale(1.15);
+  text-shadow: 4px 4px 12px rgba(255, 77, 79, 0.5);
+  transform: scale(1.2);
 }
 
 .result-content {
@@ -431,13 +432,13 @@ onBeforeUnmount(() => {
 }
 
 .winner-info {
-  font-size: 28px;
+  font-size: 24px;
   color: #ff4d4f;
   font-weight: 500;
 }
 
 .winner-name {
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 600;
   color: #ff4d4f;
   margin: 0 12px;
