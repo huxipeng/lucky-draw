@@ -294,7 +294,7 @@ const startDraw = () => {
         stopDraw()
       }
     }, 1000)
-  }, 5000)  // 改为5秒后开始倒计时
+  }, 5000)
 }
 
 const stopDraw = () => {
