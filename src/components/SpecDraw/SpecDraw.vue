@@ -1,5 +1,10 @@
 <template>
   <div class="spec-draw">
+    <!-- 添加开始动画 -->
+    <div v-if="showStartAnimation" class="start-animation-container">
+      <div class="start-text">即将开始</div>
+    </div>
+    
     <!-- 添加彩花容器到最外层 -->
     <div v-if="showResult" class="confetti-container">
       <div v-for="n in 100" :key="n" class="confetti" :style="getConfettiStyle(n)"></div>
@@ -86,6 +91,7 @@ const showResult = ref(false)
 const winner = ref('')
 const showCountdown = ref(false)
 const countdown = ref(10)
+const showStartAnimation = ref(false)
 let radius = 350
 let dtr = Math.PI/180
 let d = 500
@@ -297,25 +303,32 @@ const initTags = () => {
 }
 
 const startDraw = () => {
-  // 重置倒计时
-  countdown.value = 10
-  showCountdown.value = false
+  // 显示开始动画
+  showStartAnimation.value = true
   
-  isDrawing.value = true
-  tspeed = 15
-  baseSpeed = 0.2
-
-  // 5秒后开始倒计时
+  // 5秒后隐藏开始动画并开始抽奖
   setTimeout(() => {
-    showCountdown.value = true
-    const countdownInterval = setInterval(() => {
-      countdown.value--
-      if (countdown.value <= 0) {
-        clearInterval(countdownInterval)
-        showCountdown.value = false
-        stopDraw()
-      }
-    }, 1000)
+    showStartAnimation.value = false
+    // 重置倒计时
+    countdown.value = 10
+    showCountdown.value = false
+    
+    isDrawing.value = true
+    tspeed = 15
+    baseSpeed = 0.2
+
+    // 5秒后开始倒计时
+    setTimeout(() => {
+      showCountdown.value = true
+      const countdownInterval = setInterval(() => {
+        countdown.value--
+        if (countdown.value <= 0) {
+          clearInterval(countdownInterval)
+          showCountdown.value = false
+          stopDraw()
+        }
+      }, 1000)
+    }, 5000)
   }, 5000)
 }
 
@@ -948,6 +961,62 @@ onBeforeUnmount(() => {
   }
   to {
     transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* 开始动画样式 */
+.start-animation-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1002;
+  animation: fade-in-out 5s ease-in-out forwards;
+}
+
+.start-text {
+  font-size: 160px;
+  font-weight: bold;
+  color: #ff4d4f;
+  text-shadow: 0 0 50px rgba(255, 77, 79, 0.8);
+  animation: start-text-animation 5s ease-in-out forwards;
+  -webkit-text-stroke: 4px #fff;
+  background: linear-gradient(45deg, #ff4d4f, #ffd666);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 20px;
+  transform: scale(0);
+}
+
+@keyframes fade-in-out {
+  0% {
+    background: rgba(0, 0, 0, 0);
+  }
+  50% {
+    background: rgba(0, 0, 0, 0.5);
+  }
+  100% {
+    background: rgba(0, 0, 0, 0);
+  }
+}
+
+@keyframes start-text-animation {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  20%, 80% {
+    transform: scale(1.2) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0) rotate(180deg);
+    opacity: 0;
   }
 }
 </style>
