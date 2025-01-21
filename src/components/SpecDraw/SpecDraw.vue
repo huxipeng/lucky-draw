@@ -94,8 +94,8 @@ let active = false
 let lasta = 1
 let lastb = 1
 let distr = true
-let tspeed = 5
-let baseSpeed = 0.05
+let tspeed = 2
+let baseSpeed = 0.02
 let size = 450
 let mouseX = 0
 let mouseY = 0
@@ -323,8 +323,8 @@ const stopDraw = () => {
   isDrawing.value = false
   showCountdown.value = false
   countdown.value = 10
-  tspeed = 5
-  baseSpeed = 0.05
+  tspeed = 2
+  baseSpeed = 0.02
   // 从年终大奖池中随机抽取获奖者
   const randomIndex = Math.floor(Math.random() * annualAwardPool.participants.length)
   winner.value = annualAwardPool.participants[randomIndex]
