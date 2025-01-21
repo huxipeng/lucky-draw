@@ -13,7 +13,7 @@
                   class="spec-draw-btn"
                   @click="goToSpecDraw"
                 >
-                  年终大奖
+                  年终大奖入口
                 </a-button>
               </div>
               <div class="title-actions">

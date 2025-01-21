@@ -7,6 +7,13 @@
             <div class="card-title-wrapper">
               <div class="title-section">
                 <span class="title-text">年终大奖</span>
+                <a-button 
+                  type="link" 
+                  class="spec-draw-btn"
+                  @click="goToLuckyDraw"
+                >
+                  幸运抽奖入口
+                </a-button>
               </div>
               <div class="title-actions">
                 <a-button 
@@ -365,7 +372,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 6px 24px;
+  padding: 6px 0px;
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
@@ -521,6 +528,19 @@ onBeforeUnmount(() => {
   text-shadow: 0 0 40px rgba(255, 77, 79, 0.8);  /* 增强阴影 */
   animation: countdown-animation 1s ease-in-out infinite;
   -webkit-text-stroke: 4px #fff;  /* 添加白色描边 */
+}
+
+.spec-draw-btn {
+  font-size: 16px;
+  font-weight: 500;
+  color: #ff4d4f;
+  padding: 4px 12px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.spec-draw-btn:hover {
+  background: rgba(255, 77, 79, 0.1);
 }
 
 @keyframes countdown-animation {
