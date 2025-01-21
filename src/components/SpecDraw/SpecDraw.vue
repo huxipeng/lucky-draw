@@ -1,5 +1,10 @@
 <template>
   <div class="spec-draw">
+    <!-- 添加彩花容器到最外层 -->
+    <div v-if="showResult" class="confetti-container">
+      <div v-for="n in 100" :key="n" class="confetti" :style="getConfettiStyle(n)"></div>
+    </div>
+    
     <a-row :gutter="[16, 16]" class="draw-container">
       <a-col :span="24">
         <a-card class="draw-area">
@@ -324,6 +329,28 @@ const stopDraw = () => {
   showResult.value = true
 }
 
+// 修改彩花生成函数
+const getConfettiStyle = (n) => {
+  const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
+  const colors = [
+    '#ff4d4f', '#ff7875', '#ffa39e', '#ffccc7', '#fff1f0',
+    '#ffd666', '#ffc53d', '#fadb14', // 添加金色
+    '#95de64', '#73d13d', '#389e0d', // 添加绿色
+    '#40a9ff', '#1890ff', '#096dd9'  // 添加蓝色
+  ]
+  
+  return {
+    '--rotation': `${rand(0, 360)}deg`,
+    '--animation-delay': `${(n * 0.05)}s`,  // 减小延迟
+    '--hue': colors[Math.floor(Math.random() * colors.length)],
+    '--fall-delay': `${rand(1, 3)}s`,  // 减小延迟
+    left: `${rand(0, 100)}%`,
+    top: `-50px`,  // 调整起始位置
+    width: `${rand(8, 12)}px`,  // 随机宽度
+    height: `${rand(16, 24)}px`  // 随机高度
+  }
+}
+
 onMounted(() => {
   participants.forEach(person => {
     const span = document.createElement('span')
@@ -472,12 +499,14 @@ onBeforeUnmount(() => {
 }
 
 .result-modal :deep(.ant-modal-content) {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 245, 245, 0.95) 100%);
-  backdrop-filter: blur(20px);
-  border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(255, 77, 79, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 245, 245, 0.8) 100%);
+  backdrop-filter: blur(15px);
+  border-radius: 30px;
+  box-shadow: 0 25px 80px rgba(255, 77, 79, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.5);
   overflow: hidden;
+  position: relative;
+  z-index: 10000;
 }
 
 .result-modal :deep(.ant-modal-body) {
@@ -485,12 +514,14 @@ onBeforeUnmount(() => {
 }
 
 .result-content {
-  padding: 40px;
+  padding: 60px 40px;
   text-align: center;
   position: relative;
   overflow: hidden;
+  animation: content-show 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* 添加装饰性背景 */
 .result-content::before {
   content: '';
   position: absolute;
@@ -498,72 +529,183 @@ onBeforeUnmount(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at center, rgba(255, 77, 79, 0.1) 0%, transparent 70%);
-  pointer-events: none;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(255, 77, 79, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 215, 0, 0.1) 0%, transparent 50%);
+  z-index: -1;
+}
+
+/* 添加动态光效 */
+.result-content::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  right: -50%;
+  bottom: -50%;
+  background: linear-gradient(
+    45deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  animation: light-sweep 3s ease-in-out infinite;
+  transform: rotate(45deg);
+  z-index: -1;
 }
 
 .result-header {
-  margin-bottom: 30px;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+/* 添加装饰性边框 */
+.result-header::before,
+.result-header::after {
+  content: '';
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  border: 3px solid rgba(255, 77, 79, 0.3);
+  border-radius: 20px;
+  z-index: -1;
+}
+
+.result-header::before {
+  top: -20px;
+  left: -20px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.result-header::after {
+  bottom: -20px;
+  right: -20px;
+  border-left: none;
+  border-top: none;
 }
 
 .crown {
-  font-size: 60px;
-  margin-bottom: 20px;
-  animation: float 3s ease-in-out infinite;
+  font-size: 100px;
+  margin-bottom: 30px;
+  animation: crown-float 3s ease-in-out infinite;
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+  position: relative;
+  display: inline-block;
+}
+
+/* 添加皇冠光环效果 */
+.crown::before {
+  content: '';
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: -1;
+  animation: crown-glow 2s ease-in-out infinite;
 }
 
 .congratulations {
-  font-size: 36px;
+  font-size: 56px;
   font-weight: bold;
-  background: linear-gradient(45deg, #ff4d4f, #ff7875);
+  background: linear-gradient(45deg, #ff4d4f, #ffd666);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
+  text-shadow: 4px 4px 20px rgba(255, 77, 79, 0.3);
+  letter-spacing: 8px;
+  margin-bottom: 30px;
+  animation: text-glow 2s ease-in-out infinite;
+  position: relative;
 }
 
 .winner-info {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  margin: 40px 0;
+  gap: 30px;
+  margin: 50px 0;
+  position: relative;
+  padding: 40px 0;
+}
+
+/* 添加装饰性圆圈 */
+.winner-info::before {
+  content: '';
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border: 2px dashed rgba(255, 77, 79, 0.2);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: rotate 20s linear infinite;
 }
 
 .winner-avatar {
-  width: 120px;
-  height: 120px;
-  border-radius: 60px;
+  width: 180px;
+  height: 180px;
+  border-radius: 90px;
   background: linear-gradient(135deg, #ff4d4f, #ff7875);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
+  font-size: 72px;
   color: white;
   font-weight: bold;
-  box-shadow: 0 10px 30px rgba(255, 77, 79, 0.3);
-  animation: pulse 2s ease-in-out infinite;
+  box-shadow: 0 15px 40px rgba(255, 77, 79, 0.4),
+              inset 0 0 20px rgba(255, 255, 255, 0.4);
+  animation: winner-pulse 2s ease-in-out infinite;
+  border: 4px solid rgba(255, 255, 255, 0.8);
+  position: relative;
+  z-index: 1;
+}
+
+/* 添加头像光环效果 */
+.winner-avatar::before {
+  content: '';
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255, 77, 79, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  z-index: -1;
+  animation: avatar-glow 2s ease-in-out infinite;
 }
 
 .winner-name {
-  font-size: 48px;
+  font-size: 64px;
   font-weight: bold;
-  color: #ff4d4f;
-  text-shadow: 0 2px 10px rgba(255, 77, 79, 0.2);
   background: linear-gradient(45deg, #ff4d4f, #ff7875);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  text-shadow: 0 4px 12px rgba(255, 77, 79, 0.3);
+  letter-spacing: 4px;
+  animation: name-float 3s ease-in-out infinite;
+  position: relative;
 }
 
 .result-footer {
-  margin-top: 30px;
+  margin-top: 40px;
+  position: relative;
+  padding: 20px 0;
 }
 
 .sparkles {
-  font-size: 24px;
-  color: #ff4d4f;
-  font-weight: 500;
-  opacity: 0.8;
+  font-size: 36px;
+  font-weight: bold;
+  background: linear-gradient(45deg, #ff4d4f, #ffd666);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 20px rgba(255, 77, 79, 0.4);
+  animation: sparkle-pulse 2s ease-in-out infinite;
+  letter-spacing: 4px;
+  position: relative;
+  display: inline-block;
 }
 
 .countdown-container {
@@ -617,23 +759,154 @@ onBeforeUnmount(() => {
   }
 }
 
-@keyframes float {
+@keyframes crown-float {
+  0%, 100% {
+    transform: translateY(0) rotate(0);
+  }
+  50% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+}
+
+@keyframes text-glow {
+  0%, 100% {
+    text-shadow: 0 0 20px rgba(255, 77, 79, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 30px rgba(255, 77, 79, 0.6);
+  }
+}
+
+@keyframes winner-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 15px 40px rgba(255, 77, 79, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 20px 50px rgba(255, 77, 79, 0.6);
+  }
+}
+
+@keyframes circle-expand {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+@keyframes name-float {
   0%, 100% {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-5px);
   }
 }
 
-@keyframes pulse {
+@keyframes sparkle-pulse {
   0%, 100% {
+    opacity: 0.9;
     transform: scale(1);
-    box-shadow: 0 10px 30px rgba(255, 77, 79, 0.3);
   }
   50% {
-    transform: scale(1.05);
-    box-shadow: 0 15px 40px rgba(255, 77, 79, 0.4);
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* 修改彩花样式 */
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 100001;  /* 提高层级 */
+}
+
+.confetti {
+  position: absolute;
+  background: var(--hue);
+  width: var(--width);
+  height: var(--height);
+  transform: rotate(var(--rotation));
+  opacity: 1;  /* 修改初始透明度 */
+  animation: confetti-fall var(--fall-delay) linear infinite,
+             confetti-shake 3s ease-in-out infinite;
+  animation-delay: var(--animation-delay);
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 1;
+    top: -10%;
+    transform: translateY(0) rotate(var(--rotation));
+  }
+  100% {
+    opacity: 1;
+    top: 110%;
+    transform: translateY(0) rotate(calc(var(--rotation) + 360deg));
+  }
+}
+
+@keyframes confetti-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(30px);
+  }
+  75% {
+    transform: translateX(-30px);
+  }
+}
+
+/* 添加新的动画关键帧 */
+@keyframes light-sweep {
+  0% {
+    transform: rotate(45deg) translateX(-100%);
+  }
+  100% {
+    transform: rotate(45deg) translateX(100%);
+  }
+}
+
+@keyframes crown-glow {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.8;
+  }
+}
+
+@keyframes avatar-glow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
   }
 }
 </style>
