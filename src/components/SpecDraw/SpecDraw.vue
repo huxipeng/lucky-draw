@@ -351,6 +351,8 @@ onBeforeUnmount(() => {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  position: relative;
+  z-index: 1000;
 }
 
 .title-section {
@@ -363,6 +365,8 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 12px;
+  position: relative;
+  z-index: 1001;
 }
 
 .action-btn {
@@ -370,6 +374,8 @@ onBeforeUnmount(() => {
   padding: 0 24px;
   font-size: 16px;
   border-radius: 20px;
+  position: relative;
+  z-index: 1001;
 }
 
 .title-text {
@@ -411,6 +417,8 @@ onBeforeUnmount(() => {
   padding: 0;
   min-height: calc(100vh - 120px);
   transform: translateY(-40px);
+  z-index: 1;
+  pointer-events: none;
 }
 
 .tag-cloud-container span {
@@ -420,6 +428,7 @@ onBeforeUnmount(() => {
   position: absolute;
   text-shadow: 2px 2px 8px rgba(255, 77, 79, 0.3);
   font-size: 24px !important;
+  pointer-events: auto;
 }
 
 .tag-cloud-container span:hover {
