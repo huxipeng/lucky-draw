@@ -208,6 +208,11 @@ export const useLuckyDrawStore = defineStore('luckyDraw', {
       if (availablePrizes.length === 0) {
         return null
       }
+
+      // 这里我想把 availablePrizes 再打乱一下
+      availablePrizes = availablePrizes.sort(() => Math.random() - 0.5)
+
+      console.log('availablePrizes after', availablePrizes)
       
       // 随机抽取一个奖品
       const reward = availablePrizes[Math.floor(Math.random() * availablePrizes.length)]

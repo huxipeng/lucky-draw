@@ -9,7 +9,7 @@ export const defaultPunishmentPool = {
   // 惩罚项目
   items: [
     { id: 'p1', name: '读绕口令【施氏食狮子】' },
-    { id: 'p2', name: '找6个人口撕纸巾并传递下去' },
+    { id: 'p2', name: '跟黄总对视，谁先破防喜提一杯' },
     { id: 'p3', name: '大家都别活了，和坐位左右两边的人干一杯' },
     { id: 'p4', name: '跟抽取的人喝酒' },
     { id: 'p5', name: '给大家发红包' },
@@ -32,7 +32,7 @@ export const specialPunishmentPools = [
     ],
     // 惩罚项目
     items: [
-      { id: 'sp1-1', name: '去找会场外的陌生人讨1根烟回来给奚老板' }
+      { id: 'sp1-1', name: '没收烟，去找会场外的陌生人讨1根烟回来给奚老板' }
     ]
   },
   {
