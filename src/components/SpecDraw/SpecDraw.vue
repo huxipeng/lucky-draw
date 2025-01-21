@@ -18,16 +18,6 @@
                 >
                   开始抽奖
                 </a-button>
-                <a-button 
-                  type="primary" 
-                  danger
-                  size="large"
-                  :disabled="!isDrawing"
-                  @click="stopDraw"
-                  class="action-btn"
-                >
-                  停止抽奖
-                </a-button>
               </div>
             </div>
           </template>
@@ -94,6 +84,7 @@ let rotationX = 0
 let rotationY = 0
 let rotationZ = 0
 let rotationDirection = { x: 1, y: 1, z: 1 }
+let drawTimer = null
 
 const goToLuckyDraw = () => {
   router.push('/')
@@ -279,20 +270,22 @@ const startDraw = () => {
   isDrawing.value = true
   tspeed = 15
   baseSpeed = 0.2
+
+  drawTimer = setTimeout(() => {
+    stopDraw()
+  }, 10000)
 }
 
 const stopDraw = () => {
   isDrawing.value = false
   tspeed = 5
   baseSpeed = 0.05
-  // 随机选择获奖者
   const randomIndex = Math.floor(Math.random() * participants.length)
   winner.value = participants[randomIndex].name
   showResult.value = true
 }
 
 onMounted(() => {
-  // 创建标签
   participants.forEach(person => {
     const span = document.createElement('span')
     span.textContent = person.name
@@ -305,9 +298,11 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  // 清理工作
   if (intervalId) {
     clearInterval(intervalId)
+  }
+  if (drawTimer) {
+    clearTimeout(drawTimer)
   }
   if (tagCloudContainer.value) {
     tagCloudContainer.value.innerHTML = ''
