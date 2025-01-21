@@ -16,7 +16,7 @@
         </div>
       </a-layout-header>
       <a-layout-content class="content">
-        <lucky-draw />
+        <router-view></router-view>
       </a-layout-content>
       <a-layout-footer class="footer">
         <span>Copyright © 2025 杭州目光科技有限公司</span>
@@ -26,7 +26,6 @@
 </template>
 
 <script setup>
-import LuckyDraw from './components/LuckyDraw/LuckyDraw.vue'
 import { FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons-vue'
 import { ref, onMounted } from 'vue'
 
@@ -184,42 +183,6 @@ onMounted(() => {
   color: #fff !important;
 }
 
-.company-name {
-  color: #FFD700;
-  font-weight: 600;
-  position: relative;
-  padding: 0 12px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  letter-spacing: 1px;
-}
-
-.company-name::before,
-.company-name::after {
-  content: '✦';
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #FFD700;
-  font-size: 18px;
-  opacity: 0.9;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-}
-
-.company-name::before {
-  left: -12px;
-}
-
-.company-name::after {
-  right: -12px;
-}
-
-.title-divider {
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: normal;
-  font-size: 20px;
-  transform: scale(0.8);
-}
-
 .event-name {
   color: #fff;
   font-weight: 500;
@@ -283,10 +246,6 @@ onMounted(() => {
   gap: 12px;
   position: relative;
   z-index: 1;
-}
-
-.footer-divider {
-  color: #d9d9d9;
 }
 
 /* 卡片样式优化 */

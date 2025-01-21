@@ -6,7 +6,16 @@
         <a-card class="draw-area">
           <template #title>
             <div class="card-title-wrapper">
-              <span class="title-text">幸运抽奖</span>
+              <div class="title-section">
+                <span class="title-text">幸运抽奖</span>
+                <a-button 
+                  type="link" 
+                  class="spec-draw-btn"
+                  @click="goToSpecDraw"
+                >
+                  年终大奖
+                </a-button>
+              </div>
               <div class="title-actions">
                 <span class="remaining-count">
                   待抽奖 <span class="count-number">{{ store.availableParticipants.length }}</span> 人
@@ -163,8 +172,10 @@ import { participants } from '@/config/participants'
 import { SETTINGS } from '@/config/settings'
 import { getPersonRewardPool, getPersonPunishmentPool } from '@/config/pools'
 import * as XLSX from 'xlsx'
+import { useRouter } from 'vue-router'
 
 const store = useLuckyDrawStore()
+const router = useRouter()
 
 // 定时器变量
 let rollingTimer = null
@@ -420,6 +431,10 @@ const handleExport = () => {
     console.error('导出失败:', error)
     message.error('导出失败，请重试')
   }
+}
+
+const goToSpecDraw = () => {
+  router.push('/spec-draw')
 }
 
 // 组件挂载时导入参与者名单
@@ -1107,5 +1122,24 @@ onUnmounted(() => {
 
 .reset-button :deep(.anticon) {
   font-size: 14px;
+}
+
+.title-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.spec-draw-btn {
+  font-size: 16px;
+  font-weight: 500;
+  color: #ff4d4f;
+  padding: 4px 12px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.spec-draw-btn:hover {
+  background: rgba(255, 77, 79, 0.1);
 }
 </style> 
