@@ -10,7 +10,12 @@ export const defaultPunishmentPool = {
   items: [
     { id: 'p1', name: '读绕口令【施氏食狮子】' },
     { id: 'p2', name: '找6个人口撕纸巾并传递下去' },
-    { id: 'p3', name: '大家都别活了，和坐位左右两边的人干一杯' }
+    { id: 'p3', name: '大家都别活了，和坐位左右两边的人干一杯' },
+    { id: 'p4', name: '跟抽取的人喝酒' },
+    { id: 'p5', name: '给大家发红包' },
+    { id: 'p6', name: '找两个人陪喝' },
+    { id: 'p7', name: '现场找一个人喝酒，自己不喝' },
+    { id: 'p8', name: '顶橘子回座位' }
   ]
 }
 
