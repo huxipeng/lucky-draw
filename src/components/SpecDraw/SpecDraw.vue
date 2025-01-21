@@ -28,9 +28,40 @@
 
           <!-- 抽奖主区域 -->
           <div class="draw-main">
-            <div class="coming-soon">
-              年终大奖抽奖即将推出...
+            <div ref="tagCloudContainer" class="tag-cloud-container"></div>
+            <div class="controls">
+              <a-button 
+                type="primary" 
+                size="large"
+                :disabled="isDrawing"
+                @click="startDraw"
+              >
+                开始抽奖
+              </a-button>
+              <a-button 
+                type="primary" 
+                danger
+                size="large"
+                :disabled="!isDrawing"
+                @click="stopDraw"
+              >
+                停止抽奖
+              </a-button>
             </div>
+            <!-- 中奖结果 -->
+            <a-modal
+              v-model:visible="showResult"
+              title="抽奖结果"
+              :footer="null"
+              :maskClosable="false"
+              centered
+            >
+              <div class="result-content">
+                <div class="winner-info">
+                  🎉 恭喜 <span class="winner-name">{{ winner }}</span> 🎉
+                </div>
+              </div>
+            </a-modal>
           </div>
         </a-card>
       </a-col>
@@ -39,13 +70,67 @@
 </template>
 
 <script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
+import TagCloud from 'TagCloud'
 
 const router = useRouter()
+const tagCloudContainer = ref(null)
+let tagCloudInstance = null
+const isDrawing = ref(false)
+const showResult = ref(false)
+const winner = ref('')
+
+// 模拟参与者数据
+const participants = [
+  '张三', '李四', '王五', '赵六', '钱七', '孙八', 
+  '周九', '吴十', '郑十一', '王十二', '李十三', 
+  '刘十四', '陈十五', '杨十六', '黄十七', '赵十八'
+]
 
 const goToLuckyDraw = () => {
   router.push('/')
 }
+
+const initTagCloud = () => {
+  const options = {
+    radius: 200,
+    maxSpeed: 'normal',
+    initSpeed: 'normal',
+    direction: 135,
+    keep: true
+  }
+  
+  tagCloudInstance = TagCloud(tagCloudContainer.value, participants, options)
+}
+
+const startDraw = () => {
+  isDrawing.value = true
+  if (tagCloudInstance) {
+    tagCloudInstance.update({ maxSpeed: 'fast' })
+  }
+}
+
+const stopDraw = () => {
+  isDrawing.value = false
+  if (tagCloudInstance) {
+    tagCloudInstance.update({ maxSpeed: 'slow' })
+    // 随机选择获奖者
+    const randomIndex = Math.floor(Math.random() * participants.length)
+    winner.value = participants[randomIndex]
+    showResult.value = true
+  }
+}
+
+onMounted(() => {
+  initTagCloud()
+})
+
+onBeforeUnmount(() => {
+  if (tagCloudInstance) {
+    tagCloudInstance.destroy()
+  }
+})
 </script>
 
 <style scoped>
@@ -111,14 +196,61 @@ const goToLuckyDraw = () => {
   overflow: hidden;
   border: 1px solid rgba(255, 77, 79, 0.1);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
-.coming-soon {
+.tag-cloud-container {
+  width: 100%;
+  height: 400px;
+  position: relative;
+}
+
+:deep(.tagcloud) {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.0625em;
+  font-size: 1.1em;
+}
+
+:deep(.tagcloud--item) {
+  color: #ff4d4f;
+  padding: 2px 4px;
+  background-color: transparent;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+:deep(.tagcloud--item:hover) {
+  background-color: rgba(255, 77, 79, 0.1);
+  border-color: #ff4d4f;
+}
+
+.controls {
+  margin-top: 24px;
+  display: flex;
+  gap: 16px;
+}
+
+.result-content {
+  text-align: center;
+  padding: 24px;
+}
+
+.winner-info {
   font-size: 24px;
   color: #ff4d4f;
   font-weight: 500;
+}
+
+.winner-name {
+  font-size: 32px;
+  font-weight: 600;
+  color: #ff4d4f;
+  margin: 0 8px;
 }
 
 :deep(.ant-card-body) {
