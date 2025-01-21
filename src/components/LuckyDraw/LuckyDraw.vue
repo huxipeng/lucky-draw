@@ -322,22 +322,37 @@ const handleReset = () => {
   isDrawing.value = false
 }
 
-// 滚动效果
+/**
+ * 开始名字滚动动画
+ * 实现随机滚动效果并在一定时间后自动停止
+ */
 const startRollingName = () => {
+  // 记录上一次随机的索引,用于避免连续显示同一个名字
   let lastIndex = -1
+  
+  // 设置定时器,每50ms随机选择一个新名字
   rollingTimer = setInterval(() => {
     const participants = store.availableParticipants
     let randomIndex
+    
+    // 生成随机索引,避免和上次相同(当参与者超过1人时)
     do {
+      // Math.random()生成[0,1)之间的随机数
+      // Math.floor向下取整,确保索引在合法范围内
       randomIndex = Math.floor(Math.random() * participants.length)
     } while (randomIndex === lastIndex && participants.length > 1)
     
+    // 更新上一次的索引
     lastIndex = randomIndex
+    // 更新当前展示的名字
     currentRollingName.value = participants[randomIndex].name
-  }, 50)
+  }, 50) // 50ms的间隔确保动画流畅
 
+  // 设置随机的自动停止时间(3-5秒之间)
   const randomDuration = 3000 + Math.random() * 2000
+  // 设置自动停止定时器
   autoStopTimer = setTimeout(() => {
+    // 如果还在抽奖中,则触发停止
     if (isDrawing.value) {
       handleDrawPerson()
     }
