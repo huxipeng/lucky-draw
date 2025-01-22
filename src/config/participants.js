@@ -23,7 +23,6 @@ export const participants = [
   { id: '121', name: '吴丽亮' },
   { id: '122', name: '韩建锋' },
   { id: '123', name: '李梦秋' },
-  { id: '124', name: '杨佳雪' },
   { id: '125', name: '徐振栋' },
   { id: '126', name: '周禹豪' },
   { id: '127', name: '魏芬' },
