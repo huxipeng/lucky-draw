@@ -56,5 +56,6 @@ export const participants = [
   { id: '316', name: '陈肖肖' },
   { id: '317', name: '邵洲建' },
   { id: '318', name: '余章华' },
-  { id: '319', name: '傅建刚' }
+  { id: '319', name: '傅建刚' },
+  { id: '320', name: '陈玉霞' }
 ] 
