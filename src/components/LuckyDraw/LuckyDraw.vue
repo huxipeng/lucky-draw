@@ -20,7 +20,7 @@
                   class="red-packet-btn"
                   @click="showRedPacket"
                 >
-                  抽红包
+                  惩罚红包
                 </a-button>
               </div>
               <div class="title-actions">
