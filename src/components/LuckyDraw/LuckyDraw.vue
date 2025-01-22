@@ -374,7 +374,7 @@ const stopRolling = () => {
 const showResetConfirm = () => {
   console.log('showResetConfirm')
   resetModalVisible.value = true
-  resetPassword.value = 'asiainfo'
+  resetPassword.value = ''
 }
 
 // 处理重置确认
