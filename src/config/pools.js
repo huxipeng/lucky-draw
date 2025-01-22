@@ -142,6 +142,14 @@ export const annualAwardPool = {
   ]
 }
 
+// 红包金额配置
+export const redPacketAmounts = [
+  { id: 'rp1', amount: 10 },
+  { id: 'rp2', amount: 20 },
+  { id: 'rp3', amount: 30 },
+  { id: 'rp4', amount: 50 }
+]
+
 // 工具函数：根据概率数组随机选择一个数量
 export function getRandomCountByProbability(probabilities) {
   const random = Math.random()

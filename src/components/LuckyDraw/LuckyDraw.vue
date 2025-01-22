@@ -15,6 +15,13 @@
                 >
                   年终大奖入口
                 </a-button>
+                <a-button 
+                  type="link" 
+                  class="red-packet-btn"
+                  @click="showRedPacket"
+                >
+                  抽红包
+                </a-button>
               </div>
               <div class="title-actions">
                 <span class="remaining-count">
@@ -160,6 +167,25 @@
         注意：重置后将清空所有抽奖记录，并重置奖品数量和参与人员名单！
       </p>
     </a-modal>
+
+    <!-- 红包弹窗 -->
+    <a-modal
+      v-model:open="redPacketVisible"
+      :footer="null"
+      :maskClosable="true"
+      centered
+      width="400px"
+      class="red-packet-modal"
+      :destroyOnClose="true"
+    >
+      <div class="red-packet-content" :style="{ backgroundImage: `url(${redPacketBg})` }">
+        <div class="red-packet-amount-wrapper">
+          <div class="red-packet-amount">
+            <span class="currency">¥</span>{{ selectedAmount.toFixed(2) }}
+          </div>
+        </div>
+      </div>
+    </a-modal>
   </div>
 </template>
 
@@ -173,6 +199,8 @@ import { SETTINGS } from '@/config/settings'
 import { getPersonRewardPool, getPersonPunishmentPool } from '@/config/pools'
 import * as XLSX from 'xlsx'
 import { useRouter } from 'vue-router'
+import { redPacketAmounts } from '@/config/pools'
+import redPacketBgImage from '@/assets/red-pkg.png'
 
 const store = useLuckyDrawStore()
 const router = useRouter()
@@ -197,6 +225,11 @@ const isCompleted = ref(false)
 const resetModalVisible = ref(false)
 const resetPassword = ref('')
 const resetConfirmLoading = ref(false)
+
+// 红包相关的状态
+const redPacketVisible = ref(false)
+const selectedAmount = ref(0)
+const redPacketBg = ref(redPacketBgImage)
 
 // 计算属性
 const canDrawPerson = computed(() => store.availableParticipants.length > 0)
@@ -450,6 +483,13 @@ const handleExport = () => {
 
 const goToSpecDraw = () => {
   router.push('/spec-draw')
+}
+
+const showRedPacket = () => {
+  // 随机选择一个金额
+  const randomIndex = Math.floor(Math.random() * redPacketAmounts.length)
+  selectedAmount.value = redPacketAmounts[randomIndex].amount
+  redPacketVisible.value = true
 }
 
 // 组件挂载时导入参与者名单
@@ -1156,5 +1196,72 @@ onUnmounted(() => {
 
 .spec-draw-btn:hover {
   background: rgba(255, 77, 79, 0.1);
+}
+
+.red-packet-btn {
+  font-size: 16px;
+  font-weight: 500;
+  color: #ff4d4f;
+  padding: 4px 12px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.red-packet-btn:hover {
+  background: rgba(255, 77, 79, 0.1);
+}
+
+.red-packet-modal {
+  :deep(.ant-modal-content) {
+    background: transparent;
+    box-shadow: none;
+  }
+  
+  :deep(.ant-modal-body) {
+    padding: 0;
+  }
+}
+
+.red-packet-content {
+  width: 100%;
+  height: 500px;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  color: #fff;
+  text-align: center;
+  position: relative;
+}
+
+.red-packet-amount-wrapper {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 180px;
+  background: #FF4B4B;
+  border-radius: 8px;
+  padding: 8px 16px;
+  box-shadow: 0 2px 8px rgba(255, 75, 75, 0.2);
+}
+
+.red-packet-amount {
+  font-size: 32px;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.currency {
+  font-size: 20px;
+  margin-right: 4px;
+  margin-top: 2px;
 }
 </style> 
