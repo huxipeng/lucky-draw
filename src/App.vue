@@ -4,7 +4,7 @@
       <a-layout-header class="header">
         <div class="header-content">
           <h1>
-            <span class="event-name">2025年承信&目光迎新年会</span>
+            <span class="event-name">2025年XXX迎新年会</span>
           </h1>
           <div 
             class="header-fullscreen-btn"
@@ -19,7 +19,7 @@
         <router-view></router-view>
       </a-layout-content>
       <a-layout-footer class="footer">
-        <span>Copyright © 2025 杭州目光科技有限公司</span>
+        <span>Copyright © 2025 xxxxx有限公司</span>
       </a-layout-footer>
     </a-layout>
   </div>
