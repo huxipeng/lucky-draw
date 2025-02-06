@@ -1,5 +1,4 @@
 export const participants = [
-  // 目光
   { id: '101', name: '张三' },
   { id: '102', name: '李四' },
   { id: '103', name: '王五' },
@@ -26,8 +25,6 @@ export const participants = [
   { id: '125', name: '何四' },
   { id: '126', name: '郭五' },
   { id: '127', name: '马六' },
-
-  // 承信
   { id: '201', name: '梁七' },
   { id: '202', name: '韩八' },
   { id: '203', name: '叶九' },
@@ -35,8 +32,6 @@ export const participants = [
   { id: '205', name: '曾一' },
   { id: '206', name: '彭二' },
   { id: '207', name: '董三' },
-
-  // 三方
   { id: '301', name: '蒋四' },
   { id: '302', name: '沈五' },
   { id: '303', name: '韦六' },
