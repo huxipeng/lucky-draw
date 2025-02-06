@@ -25,21 +25,21 @@ export const specialPunishmentPools = [
     id: 'special1',
     name: '惩罚池1',
     // 指定使用这个惩罚池的人员名单
-    participants: ['陈兴'],
+    participants: ['梁七'],
     // 抽取数量的概率配置
     drawCountProbability: [
       { count: 1, probability: 1 }
     ],
     // 惩罚项目
     items: [
-      { id: 'sp1-1', name: '没收烟，去找会场外的陌生人讨1根烟回来给奚老板' }
+      { id: 'sp1-1', name: '没收烟，去找会场外的陌生人讨1根烟回来给老板' }
     ]
   },
   {
     id: 'special2',
     name: '惩罚池2',
     // 指定使用这个惩罚池的人员名单
-    participants: ['李丽', '华云芳', '戴舻勇'],
+    participants: ['俞一', '赵五', '严六'],
     // 抽取数量的概率配置
     drawCountProbability: [
       { count: 1, probability: 1 },
@@ -47,26 +47,6 @@ export const specialPunishmentPools = [
     // 惩罚项目
     items: [
       { id: 'sp2-1', name: '唱一首歌曲或喝一瓶' }
-    ]
-  },
-  {
-    id: 'special3',
-    name: '惩罚池3',
-    // 指定使用这个惩罚池的人员名单
-    participants: ['沈晓伟', '夏欢欢', '傅宇成', '赵碧峰', '罗向利', '姚杰', '汪毅', '李鹏飞', '许琦', '韩建锋'],
-    // 抽取数量的概率配置
-    drawCountProbability: [
-      { count: 1, probability: 1 },
-    ],
-    // 惩罚项目
-    items: [
-      { id: 'p9', name: '读绕口令【施氏食狮子】' },
-      { id: 'p10', name: '跟XXX对视，谁先破防喜提一杯' },
-      { id: 'p11', name: '跟抽取的人喝酒' },
-      { id: 'p12', name: '给大家发红包' },
-      { id: 'p13', name: '找两个人陪喝' },
-      { id: 'p14', name: '现场找一个人喝酒，自己不喝' },
-      { id: 'p15', name: '顶橘子回座位，掉了喝酒/发红包' }
     ]
   }
 ]
@@ -84,8 +64,8 @@ export const defaultRewardPool = {
     { id: 'r1-6', name: '复古蓝牙音箱', count: 2 },
     { id: 'r1-7', name: '车载吸尘器', count: 4 },
     { id: 'r1-8', name: '香薰蜡烛', count: 6 },
-    { id: 'r1-9', name: '蛇年商务礼盒', count: 7 },
-    { id: 'r1-10', name: '小天鹅迷你洗衣机', count: 6 },
+    { id: 'r1-9', name: '蛇年商务礼盒', count: 6 },
+    { id: 'r1-10', name: '小天鹅迷你洗衣机', count: 5 },
     { id: 'r1-11', name: '超声波清洗机', count: 2 },
     { id: 'r1-12', name: '无线鼠标', count: 4 },
     { id: 'r1-13', name: '机械键盘', count: 3 },
@@ -94,36 +74,16 @@ export const defaultRewardPool = {
   ]
 }
 
+
 // 特殊奖励池配置
 export const specialRewardPools = [
   {
-    id: 2,
-    name: '奖励池B',
-    participants: [
-      '胡希鹏'
-    ],
+    id: 'special1',
+    name: '特殊奖励池1',
+    participants: ['梁七', '董三'],
     items: [
-      { id: 'r1-16', name: '小米破壁机', count: 1 }
-    ]
-  },
-  {
-    id: 3,
-    name: '奖励池C',
-    participants: [
-      '李存考'
-    ],
-    items: [
-      { id: 'r1-17', name: '移动硬盘', count: 1 }
-    ]
-  },
-  {
-    id: 4,
-    name: '奖励池D',
-    participants: [
-      '黄建清'
-    ],
-    items: [
-      { id: 'r1-18', name: '机械日历', count: 1 }
+      { id: 'sr1-1', name: '特制机械键盘', count: 1 },
+      { id: 'sr1-2', name: '定制保温杯', count: 1 }
     ]
   }
 ]
@@ -132,13 +92,13 @@ export const specialRewardPools = [
 export const annualAwardPool = {
   name: '年终大奖池',
   participants: [
-    '冯旭阳',
-    '杨梦',
-    '余燕双',
-    '任道艳',
-    '夏欢欢',
-    '李茜茜',
-    '余凯宁'
+    '周九',
+    '郑一',
+    '王二',
+    '刘一',
+    '陈二',
+    '黄四',
+    '孙九'
   ]
 }
 
